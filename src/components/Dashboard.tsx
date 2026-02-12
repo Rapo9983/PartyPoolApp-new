@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Event } from '../lib/supabaseClient';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Calendar, DollarSign, LogOut, Gift, ExternalLink, Trash2, Edit } from 'lucide-react';
+import { Plus, Calendar, LogOut, Gift, ExternalLink, Trash2, Edit } from 'lucide-react';
 import Footer from './Footer';
 import GoalReachedModal from './GoalReachedModal';
 import InstallPWABanner from './InstallPWABanner';

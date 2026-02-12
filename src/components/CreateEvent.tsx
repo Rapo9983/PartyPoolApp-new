@@ -4,7 +4,22 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabaseClient';
 import { extractImageFromUrl, formatCurrency } from '../lib/utils';
 import { addAmazonAffiliateTag, isAmazonLink, expandShortAmazonUrl } from '../lib/affiliateUtils';
-import { Calendar, DollarSign, User, FileText, Link2, ArrowLeft, Clock, MapPin, Gift, Mail, Image as ImageIcon, Upload, Users, Check, Info } from 'lucide-react';
+import { Calendar, Euro, User, FileText, Link2, ArrowLeft, Clock, MapPin, Gift, Image as ImageIcon, Upload, Users, Check, Info } from 'lucide-react';
+
+const PayPalIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20.5 7.9c0 4.4-3.6 8-8 8h-2l-1 5h-3l2-10h4c2.8 0 5-2.2 5-5 0-.6-.1-1.2-.3-1.7 1.4.8 2.3 2.3 2.3 4 0 .2 0 .5-.1.7z" fill="#009cde"/>
+    <path d="M17.2 2.2C16.5 1.5 15.5 1 14.4 1H7.9c-.5 0-.9.4-1 .9L4.5 14.3c-.1.3.2.6.5.6h3l1-5h2c4.4 0 8-3.6 8-8 0-.2 0-.5-.1-.7-.5-.7-1.2-1.2-2-1.5z" fill="#012169"/>
+  </svg>
+);
+
+const SatispayIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="2" width="16" height="20" rx="2" stroke="#F5333F" strokeWidth="2" fill="none"/>
+    <circle cx="12" cy="8" r="2" fill="#F5333F"/>
+    <path d="M8 14h8M8 17h8" stroke="#F5333F" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
 
 interface CreateEventProps {
   onEventCreated: (slug: string) => void;
@@ -378,7 +393,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
             <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="currency" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <DollarSign className="w-4 h-4" />
+                  <Euro className="w-4 h-4" />
                   {t('event.currency')}
                 </label>
                 <select
@@ -395,7 +410,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
 
               <div className="md:col-span-2">
                 <label htmlFor="budgetGoal" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <DollarSign className="w-4 h-4" />
+                  <Euro className="w-4 h-4" />
                   {t('event.budgetGoal')}
                 </label>
                 <div className="relative">
@@ -526,32 +541,42 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="paypalEmail" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Mail className="w-4 h-4" />
+                  <PayPalIcon />
                   {t('event.paypalEmail')}
                 </label>
-                <input
-                  id="paypalEmail"
-                  type="text"
-                  value={formData.paypalEmail}
-                  onChange={(e) => setFormData({ ...formData, paypalEmail: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                  placeholder={t('event.paypalEmailPlaceholder')}
-                />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <PayPalIcon />
+                  </div>
+                  <input
+                    id="paypalEmail"
+                    type="text"
+                    value={formData.paypalEmail}
+                    onChange={(e) => setFormData({ ...formData, paypalEmail: e.target.value })}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+                    placeholder={t('event.paypalEmailPlaceholder')}
+                  />
+                </div>
               </div>
 
               <div>
                 <label htmlFor="satispayId" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <DollarSign className="w-4 h-4" />
+                  <SatispayIcon />
                   {t('event.satispayId')}
                 </label>
-                <input
-                  id="satispayId"
-                  type="text"
-                  value={formData.satispayId}
-                  onChange={(e) => setFormData({ ...formData, satispayId: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                  placeholder={t('event.satispayIdPlaceholder')}
-                />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <SatispayIcon />
+                  </div>
+                  <input
+                    id="satispayId"
+                    type="text"
+                    value={formData.satispayId}
+                    onChange={(e) => setFormData({ ...formData, satispayId: e.target.value })}
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+                    placeholder={t('event.satispayIdPlaceholder')}
+                  />
+                </div>
               </div>
             </div>
 

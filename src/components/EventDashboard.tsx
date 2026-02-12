@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { extractImageFromUrl, formatCurrency } from '../lib/utils';
 import { addAmazonAffiliateTag, isAmazonLink, getAffiliateDisclaimer, generateCalendarEvent, downloadCalendarFile, createGoogleCalendarUrl } from '../lib/affiliateUtils';
-import { Calendar, DollarSign, Users, MessageSquare, Share2, ArrowLeft, Clock, MapPin, Gift, ExternalLink, MessageCircle, Trash2, QrCode, Edit, Coffee, ShoppingBag, CalendarPlus, Wallet, CheckCircle } from 'lucide-react';
+import { Calendar, Users, MessageSquare, Share2, ArrowLeft, Clock, MapPin, Gift, ExternalLink, MessageCircle, Trash2, QrCode, Edit, Coffee, ShoppingBag, CalendarPlus, Wallet, CheckCircle } from 'lucide-react';
 import ContributionForm from './ContributionForm';
 import WishForm from './WishForm';
 import QRCodeModal from './QRCodeModal';
