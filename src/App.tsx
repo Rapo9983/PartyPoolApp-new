@@ -29,7 +29,17 @@ function AppContent() {
     } else if (path === '/privacy') {
       setView('privacy-policy');
     } else if (user) {
-      setView('dashboard');
+      const savedView = localStorage.getItem('currentView');
+      const savedEventId = localStorage.getItem('editingEventId');
+
+      if (savedView === 'create-event') {
+        setView('create-event');
+      } else if (savedView === 'edit-event' && savedEventId) {
+        setEventIdToEdit(savedEventId);
+        setView('edit-event');
+      } else {
+        setView('dashboard');
+      }
     } else {
       setView('landing');
     }
@@ -39,13 +49,20 @@ function AppContent() {
     setEventSlug(slug);
     setView('view-event');
     window.history.pushState({}, '', `/event/${slug}`);
+    localStorage.removeItem('currentView');
+    localStorage.removeItem('editingEventId');
   };
 
   const handleEventCreated = (slug: string) => {
+    localStorage.removeItem('currentView');
+    localStorage.removeItem('editingEventId');
+    localStorage.removeItem('eventDraft');
     handleViewEvent(slug);
   };
 
   const handleBackToDashboard = () => {
+    localStorage.removeItem('currentView');
+    localStorage.removeItem('editingEventId');
     if (user) {
       setView('dashboard');
       setEventSlug(null);
@@ -68,10 +85,19 @@ function AppContent() {
   const handleEditEvent = (eventId: string) => {
     setEventIdToEdit(eventId);
     setView('edit-event');
+    localStorage.setItem('currentView', 'edit-event');
+    localStorage.setItem('editingEventId', eventId);
   };
 
   const handleEventUpdated = (slug: string) => {
+    localStorage.removeItem('currentView');
+    localStorage.removeItem('editingEventId');
     handleViewEvent(slug);
+  };
+
+  const handleCreateEvent = () => {
+    setView('create-event');
+    localStorage.setItem('currentView', 'create-event');
   };
 
   if (loading) {
@@ -185,7 +211,7 @@ function AppContent() {
       />
       <div className="pt-20">
         <Dashboard
-          onCreateEvent={() => setView('create-event')}
+          onCreateEvent={handleCreateEvent}
           onViewEvent={handleViewEvent}
           onEditEvent={handleEditEvent}
         />
