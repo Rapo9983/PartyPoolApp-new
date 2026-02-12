@@ -1,0 +1,24 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#3b82f6"/>
+
+  <!-- Maskable safe area - 25% margin all around -->
+  <g transform="translate(256, 256)">
+    <!-- Gift box body - smaller to fit safe area -->
+    <rect x="-70" y="5" width="140" height="110" rx="10" fill="white" opacity="0.95"/>
+
+    <!-- Ribbon vertical -->
+    <rect x="-10" y="5" width="20" height="110" fill="#f59e0b" opacity="0.95"/>
+
+    <!-- Ribbon horizontal -->
+    <rect x="-70" y="45" width="140" height="20" fill="#f59e0b" opacity="0.95"/>
+
+    <!-- Bow top -->
+    <circle cx="-24" cy="-15" r="16" fill="#ef4444" opacity="0.95"/>
+    <circle cx="24" cy="-15" r="16" fill="#ef4444" opacity="0.95"/>
+    <circle cx="0" cy="-20" r="12" fill="#dc2626" opacity="0.95"/>
+
+    <!-- Bow ribbons -->
+    <path d="M -24 -15 L -35 -35 L -28 -40 L -20 -25 Z" fill="#ef4444" opacity="0.9"/>
+    <path d="M 24 -15 L 35 -35 L 28 -40 L 20 -25 Z" fill="#ef4444" opacity="0.9"/>
+  </g>
+</svg>

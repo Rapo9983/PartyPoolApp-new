@@ -1,0 +1,24 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#3b82f6"/>
+
+  <!-- Safe area for maskable icon - content centered with 20% margin -->
+  <g transform="translate(256, 256)">
+    <!-- Gift box body -->
+    <rect x="-90" y="0" width="180" height="140" rx="12" fill="white" opacity="0.95"/>
+
+    <!-- Ribbon vertical -->
+    <rect x="-12" y="0" width="24" height="140" fill="#f59e0b" opacity="0.95"/>
+
+    <!-- Ribbon horizontal -->
+    <rect x="-90" y="50" width="180" height="24" fill="#f59e0b" opacity="0.95"/>
+
+    <!-- Bow top -->
+    <circle cx="-30" cy="-20" r="20" fill="#ef4444" opacity="0.95"/>
+    <circle cx="30" cy="-20" r="20" fill="#ef4444" opacity="0.95"/>
+    <circle cx="0" cy="-25" r="15" fill="#dc2626" opacity="0.95"/>
+
+    <!-- Bow ribbons -->
+    <path d="M -30 -20 L -45 -45 L -35 -50 L -25 -30 Z" fill="#ef4444" opacity="0.9"/>
+    <path d="M 30 -20 L 45 -45 L 35 -50 L 25 -30 Z" fill="#ef4444" opacity="0.9"/>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="giftGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Gift Box Base -->
+  <rect x="106" y="256" width="300" height="200" rx="8" fill="url(#giftGradient)"/>
+
+  <!-- Gift Box Top -->
+  <rect x="90" y="200" width="332" height="70" rx="8" fill="url(#giftGradient)" opacity="0.9"/>
+
+  <!-- Vertical Ribbon -->
+  <rect x="236" y="200" width="40" height="256" fill="#fbbf24"/>
+
+  <!-- Horizontal Ribbon -->
+  <rect x="90" y="230" width="332" height="40" fill="#fbbf24"/>
+
+  <!-- Bow Left Loop -->
+  <ellipse cx="220" cy="140" rx="45" ry="55" fill="#f59e0b" transform="rotate(-25 220 140)"/>
+
+  <!-- Bow Right Loop -->
+  <ellipse cx="292" cy="140" rx="45" ry="55" fill="#f59e0b" transform="rotate(25 292 140)"/>
+
+  <!-- Bow Center -->
+  <circle cx="256" cy="150" r="30" fill="#f97316"/>
+
+  <!-- Bow Ribbons -->
+  <path d="M 256 180 L 230 210 L 240 220" fill="none" stroke="#f59e0b" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 256 180 L 282 210 L 272 220" fill="none" stroke="#f59e0b" stroke-width="12" stroke-linecap="round"/>
+</svg>

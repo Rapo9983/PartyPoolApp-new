@@ -1,0 +1,3 @@
+PartyPool App - A collaborative gift pooling application for events
+
+This project allows users to create events, set gift goals, and collect contributions from participants. Built with React, TypeScript, Vite, Tailwind CSS, and Supabase.
