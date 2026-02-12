@@ -124,7 +124,7 @@ export default function Footer({ onCreateEventClick, onSignInClick }: FooterProp
             </div>
           </div>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
-            <p>© 2026 {t('app.name')} - {t('footer.copyright')}</p>
+            <p>© 2026 {t('app.name')} - {t('footer.copyright')} | <a href="mailto:info@partypoolapp.com" className="hover:text-white transition">info@partypoolapp.com</a></p>
             <p className="text-center md:text-right">{t('footer.madeWith')}</p>
           </div>
         </div>
