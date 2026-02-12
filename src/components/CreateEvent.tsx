@@ -30,7 +30,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
     location: '',
     description: '',
     budgetGoal: '',
-    currency: '$',
+    currency: '€',
     contributionType: 'free' as 'free' | 'equal_shares',
     participantsCount: '',
     giftUrl: '',
@@ -387,8 +387,8 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                 >
-                  <option value="$">$ USD</option>
                   <option value="€">€ EUR</option>
+                  <option value="$">$ USD</option>
                   <option value="£">£ GBP</option>
                 </select>
               </div>

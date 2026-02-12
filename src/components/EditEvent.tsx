@@ -30,7 +30,7 @@ export default function EditEvent({ eventId, onEventUpdated, onBack }: EditEvent
     location: '',
     description: '',
     budgetGoal: '',
-    currency: '$',
+    currency: '€',
     contributionType: 'free' as 'free' | 'equal_shares',
     participantsCount: '',
     giftUrl: '',
@@ -70,7 +70,7 @@ export default function EditEvent({ eventId, onEventUpdated, onBack }: EditEvent
         location: eventData.location || '',
         description: eventData.description || '',
         budgetGoal: eventData.budget_goal?.toString() || '',
-        currency: eventData.currency || '$',
+        currency: eventData.currency || '€',
         contributionType: eventData.contribution_type || 'free',
         participantsCount: eventData.participants_count?.toString() || '',
         giftUrl: eventData.gift_url || '',
@@ -374,8 +374,8 @@ export default function EditEvent({ eventId, onEventUpdated, onBack }: EditEvent
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                 >
-                  <option value="$">$ USD</option>
                   <option value="€">€ EUR</option>
+                  <option value="$">$ USD</option>
                   <option value="£">£ GBP</option>
                 </select>
               </div>
