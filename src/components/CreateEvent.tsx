@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabaseClient';
-import { addAmazonAffiliateTag, extractImageFromUrl, formatCurrency } from '../lib/utils';
-import { Calendar, DollarSign, User, FileText, Link2, ArrowLeft, Clock, MapPin, Gift, Mail, Image as ImageIcon, Upload, Users } from 'lucide-react';
+import { extractImageFromUrl, formatCurrency } from '../lib/utils';
+import { addAmazonAffiliateTag, isAmazonLink, expandShortAmazonUrl } from '../lib/affiliateUtils';
+import { Calendar, DollarSign, User, FileText, Link2, ArrowLeft, Clock, MapPin, Gift, Mail, Image as ImageIcon, Upload, Users, Check, Info } from 'lucide-react';
 
 interface CreateEventProps {
   onEventCreated: (slug: string) => void;
@@ -19,6 +20,9 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
   const [celebrantImageUrl, setCelebrantImageUrl] = useState<string>('');
   const [celebrantImagePreview, setCelebrantImagePreview] = useState<string | null>(null);
   const [imageInputType, setImageInputType] = useState<'url' | 'file'>('url');
+  const [showDraftRecoveredMessage, setShowDraftRecoveredMessage] = useState(false);
+  const [amazonLinkValid, setAmazonLinkValid] = useState(false);
+  const [processingAmazonLink, setProcessingAmazonLink] = useState(false);
   const [formData, setFormData] = useState({
     celebrantName: '',
     eventDate: '',
@@ -33,6 +37,44 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
     paypalEmail: '',
     satispayId: '',
   });
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('eventDraft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        setFormData(draft.formData);
+        if (draft.celebrantImageUrl && !draft.celebrantImageUrl.startsWith('data:')) {
+          setCelebrantImageUrl(draft.celebrantImageUrl);
+          setCelebrantImagePreview(draft.celebrantImageUrl);
+        }
+        if (draft.imageInputType) {
+          setImageInputType(draft.imageInputType);
+        }
+        if (draft.formData.giftUrl) {
+          const imageUrl = extractImageFromUrl(draft.formData.giftUrl);
+          setGiftPreviewUrl(imageUrl);
+        }
+        setShowDraftRecoveredMessage(true);
+        setTimeout(() => setShowDraftRecoveredMessage(false), 5000);
+      } catch (error) {
+        console.error('Failed to load draft:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const draft = {
+        formData,
+        celebrantImageUrl: celebrantImageUrl.startsWith('data:') ? '' : celebrantImageUrl,
+        imageInputType,
+      };
+      localStorage.setItem('eventDraft', JSON.stringify(draft));
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, celebrantImageUrl, imageInputType]);
 
   const generateSlug = (name: string) => {
     return name
@@ -52,11 +94,31 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
     return null;
   };
 
-  const handleGiftUrlChange = (url: string) => {
+  const handleGiftUrlChange = async (url: string) => {
     setFormData({ ...formData, giftUrl: url });
+    setAmazonLinkValid(false);
 
     const imageUrl = extractImageFromUrl(url);
     setGiftPreviewUrl(imageUrl);
+
+    if (url && isAmazonLink(url)) {
+      setProcessingAmazonLink(true);
+      try {
+        let processedUrl = url;
+
+        if (url.includes('amzn.to') || url.includes('amzn.eu')) {
+          processedUrl = await expandShortAmazonUrl(url);
+        }
+
+        const cleanUrl = addAmazonAffiliateTag(processedUrl);
+        setFormData(prev => ({ ...prev, giftUrl: cleanUrl }));
+        setAmazonLinkValid(true);
+      } catch (error) {
+        console.error('Error processing Amazon link:', error);
+      } finally {
+        setProcessingAmazonLink(false);
+      }
+    }
   };
 
   const handleCelebrantImageUrlChange = (url: string) => {
@@ -117,6 +179,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
 
       if (insertError) throw insertError;
 
+      localStorage.removeItem('eventDraft');
       onEventCreated(slug);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create event');
@@ -145,6 +208,20 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
               {t('event.create')}
             </h1>
           </div>
+
+          {showDraftRecoveredMessage && (
+            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3 animate-fade-in">
+              <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-900">
+                  {t('event.draftRecovered')}
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  {t('event.draftRecoveredDesc')}
+                </p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -403,14 +480,34 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
                 <Gift className="w-4 h-4" />
                 {t('event.giftUrl')}
               </label>
-              <input
-                id="giftUrl"
-                type="url"
-                value={formData.giftUrl}
-                onChange={(e) => handleGiftUrlChange(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                placeholder={t('event.giftUrlPlaceholder')}
-              />
+              <div className="relative">
+                <input
+                  id="giftUrl"
+                  type="url"
+                  value={formData.giftUrl}
+                  onChange={(e) => handleGiftUrlChange(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition pr-12"
+                  placeholder={t('event.giftUrlPlaceholder')}
+                />
+                {processingAmazonLink && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
+                  </div>
+                )}
+                {amazonLinkValid && !processingAmazonLink && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <div className="bg-green-100 rounded-full p-1">
+                      <Check className="w-4 h-4 text-green-600" />
+                    </div>
+                  </div>
+                )}
+              </div>
+              {amazonLinkValid && !processingAmazonLink && (
+                <p className="mt-2 text-xs text-green-600 flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  {t('event.amazonLinkValid')}
+                </p>
+              )}
               {giftPreviewUrl && (
                 <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 mb-2">{t('event.giftPreview')}</p>

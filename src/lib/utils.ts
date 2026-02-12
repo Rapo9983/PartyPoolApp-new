@@ -1,26 +1,3 @@
-const AMAZON_AFFILIATE_TAG = 'partypool-21';
-
-export function addAmazonAffiliateTag(url: string): string {
-  if (!url) return url;
-
-  try {
-    const urlObj = new URL(url);
-    const isAmazon = urlObj.hostname.includes('amazon.');
-
-    if (!isAmazon) return url;
-
-    if (urlObj.searchParams.has('tag')) {
-      urlObj.searchParams.set('tag', AMAZON_AFFILIATE_TAG);
-    } else {
-      urlObj.searchParams.append('tag', AMAZON_AFFILIATE_TAG);
-    }
-
-    return urlObj.toString();
-  } catch {
-    return url;
-  }
-}
-
 export function extractImageFromUrl(url: string): string | null {
   if (!url) return null;
 

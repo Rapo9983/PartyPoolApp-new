@@ -18,9 +18,14 @@ export function addAmazonAffiliateTag(url: string): string {
   try {
     const urlObj = new URL(url);
 
-    urlObj.searchParams.delete('tag');
-    urlObj.searchParams.delete('linkCode');
-    urlObj.searchParams.delete('linkId');
+    const trackingParams = [
+      'tag', 'linkCode', 'linkId', 'ref', 'ref_', 'qid', 'psc',
+      'pd_rd_i', 'pd_rd_r', 'pd_rd_w', 'pd_rd_wg', 'pf_rd_i',
+      'pf_rd_m', 'pf_rd_p', 'pf_rd_r', 'pf_rd_s', 'pf_rd_t',
+      'keywords', 'crid', 'sprefix', 'sr'
+    ];
+
+    trackingParams.forEach(param => urlObj.searchParams.delete(param));
 
     urlObj.searchParams.set('tag', AMAZON_AFFILIATE_TAG);
 
@@ -28,6 +33,29 @@ export function addAmazonAffiliateTag(url: string): string {
   } catch {
     return url;
   }
+}
+
+export async function expandShortAmazonUrl(url: string): Promise<string> {
+  if (!url.includes('amzn.to') && !url.includes('amzn.eu')) {
+    return url;
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: 'HEAD',
+      redirect: 'manual',
+      mode: 'no-cors'
+    });
+
+    const location = response.headers.get('location');
+    if (location) {
+      return location;
+    }
+  } catch (error) {
+    console.log('Could not expand short URL:', error);
+  }
+
+  return url;
 }
 
 export function getAffiliateDisclaimer(): string {

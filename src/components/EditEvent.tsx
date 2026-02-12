@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Event } from '../lib/supabaseClient';
-import { addAmazonAffiliateTag, extractImageFromUrl, formatCurrency } from '../lib/utils';
+import { extractImageFromUrl, formatCurrency } from '../lib/utils';
+import { addAmazonAffiliateTag } from '../lib/affiliateUtils';
 import { Calendar, DollarSign, User, FileText, ArrowLeft, Clock, MapPin, Gift, Mail, Image as ImageIcon, Upload, Save, Users } from 'lucide-react';
 
 interface EditEventProps {
