@@ -6,7 +6,7 @@ import { createPayPalLink, formatCurrency } from '../lib/utils';
 import { requestNotificationPermission, scheduleReminder } from '../lib/affiliateUtils';
 import SatispayPopup from './SatispayPopup';
 import confetti from 'canvas-confetti';
-import { X, Euro, User, MessageSquare, Coffee, Wallet, CreditCard, Bell, Calendar as CalendarIcon } from 'lucide-react';
+import { X, User, MessageSquare, Coffee, Wallet, CreditCard, Bell, Calendar as CalendarIcon } from 'lucide-react';
 
 interface ContributionFormProps {
   eventId: string;
@@ -143,8 +143,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
           </div>
 
           <div>
-            <label htmlFor="amount" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Euro className="w-4 h-4" />
+            <label htmlFor="amount" className="text-sm font-medium text-gray-700 mb-2 block">
               {t('contribution.amount')}
             </label>
             <div className="relative">

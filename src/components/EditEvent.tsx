@@ -4,7 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Event } from '../lib/supabaseClient';
 import { extractImageFromUrl, formatCurrency } from '../lib/utils';
 import { addAmazonAffiliateTag } from '../lib/affiliateUtils';
-import { Calendar, Euro, User, FileText, ArrowLeft, Clock, MapPin, Gift, Image as ImageIcon, Upload, Save, Users } from 'lucide-react';
+import { Calendar, User, FileText, ArrowLeft, Clock, MapPin, Gift, Image as ImageIcon, Upload, Save, Users } from 'lucide-react';
 
 const PayPalIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -379,8 +379,7 @@ export default function EditEvent({ eventId, onEventUpdated, onBack }: EditEvent
 
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="currency" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Euro className="w-4 h-4" />
+                <label htmlFor="currency" className="text-sm font-medium text-gray-700 mb-2 block">
                   {t('event.currency')}
                 </label>
                 <select
@@ -396,8 +395,7 @@ export default function EditEvent({ eventId, onEventUpdated, onBack }: EditEvent
               </div>
 
               <div className="md:col-span-2">
-                <label htmlFor="budgetGoal" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Euro className="w-4 h-4" />
+                <label htmlFor="budgetGoal" className="text-sm font-medium text-gray-700 mb-2 block">
                   {t('event.budgetGoal')}
                 </label>
                 <div className="relative">
