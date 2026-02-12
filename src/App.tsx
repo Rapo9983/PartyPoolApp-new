@@ -8,9 +8,11 @@ import EditEvent from './components/EditEvent';
 import EventDashboard from './components/EventDashboard';
 import LandingPage from './components/LandingPage';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import HowItWorks from './components/HowItWorks';
+import FAQ from './components/FAQ';
 import Navbar from './components/Navbar';
 
-type View = 'landing' | 'auth' | 'dashboard' | 'create-event' | 'edit-event' | 'view-event' | 'privacy-policy';
+type View = 'landing' | 'auth' | 'dashboard' | 'create-event' | 'edit-event' | 'view-event' | 'privacy-policy' | 'how-it-works' | 'faq';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -28,6 +30,10 @@ function AppContent() {
       }
     } else if (path === '/privacy') {
       setView('privacy-policy');
+    } else if (path === '/how-it-works') {
+      setView('how-it-works');
+    } else if (path === '/faq') {
+      setView('faq');
     } else if (user) {
       const savedView = localStorage.getItem('currentView');
       const savedEventId = localStorage.getItem('editingEventId');
@@ -117,6 +123,40 @@ function AppContent() {
         />
         <div className="pt-20">
           <PrivacyPolicy onBack={user ? handleBackToDashboard : handleBackToLanding} />
+        </div>
+      </>
+    );
+  }
+
+  if (view === 'how-it-works') {
+    return (
+      <>
+        <Navbar
+          onSignInClick={handleGetStarted}
+          onDashboardClick={user ? handleBackToDashboard : handleBackToLanding}
+        />
+        <div className="pt-20">
+          <HowItWorks
+            onBack={user ? handleBackToDashboard : handleBackToLanding}
+            onCreateEvent={user ? handleCreateEvent : undefined}
+          />
+        </div>
+      </>
+    );
+  }
+
+  if (view === 'faq') {
+    return (
+      <>
+        <Navbar
+          onSignInClick={handleGetStarted}
+          onDashboardClick={user ? handleBackToDashboard : handleBackToLanding}
+        />
+        <div className="pt-20">
+          <FAQ
+            onBack={user ? handleBackToDashboard : handleBackToLanding}
+            onCreateEvent={user ? handleCreateEvent : undefined}
+          />
         </div>
       </>
     );

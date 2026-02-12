@@ -7,6 +7,11 @@ interface NavbarProps {
   onDashboardClick?: () => void;
 }
 
+function navigateToPage(path: string) {
+  window.history.pushState({}, '', path);
+  window.location.href = path;
+}
+
 export default function Navbar({ onSignInClick, onDashboardClick }: NavbarProps) {
   const { user, signOut } = useAuth();
   const { t, language, setLanguage } = useLanguage();
@@ -30,6 +35,21 @@ export default function Navbar({ onSignInClick, onDashboardClick }: NavbarProps)
               PartyPool
             </span>
           </button>
+
+          <div className="hidden md:flex items-center gap-6">
+            <button
+              onClick={() => navigateToPage('/how-it-works')}
+              className="text-gray-700 hover:text-orange-500 font-medium transition"
+            >
+              {t('landing.howItWorksTitle')}
+            </button>
+            <button
+              onClick={() => navigateToPage('/faq')}
+              className="text-gray-700 hover:text-orange-500 font-medium transition"
+            >
+              FAQ
+            </button>
+          </div>
 
           <div className="flex items-center gap-4">
             <button

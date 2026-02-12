@@ -9,18 +9,9 @@ interface FooterProps {
 export default function Footer({ onCreateEventClick, onSignInClick }: FooterProps) {
   const { t } = useLanguage();
 
-  const scrollToFAQ = () => {
-    const faqSection = document.getElementById('faq-section');
-    if (faqSection) {
-      faqSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const scrollToHowItWorks = () => {
-    const howItWorksSection = document.getElementById('how-it-works-section');
-    if (howItWorksSection) {
-      howItWorksSection.scrollIntoView({ behavior: 'smooth' });
-    }
+  const navigateToPage = (path: string) => {
+    window.history.pushState({}, '', path);
+    window.location.href = path;
   };
 
   return (
@@ -66,7 +57,7 @@ export default function Footer({ onCreateEventClick, onSignInClick }: FooterProp
               )}
               <li>
                 <button
-                  onClick={scrollToHowItWorks}
+                  onClick={() => navigateToPage('/how-it-works')}
                   className="flex items-center gap-2 text-gray-400 hover:text-white transition justify-center md:justify-start mx-auto md:mx-0"
                 >
                   {t('landing.howItWorksTitle')}
@@ -74,7 +65,7 @@ export default function Footer({ onCreateEventClick, onSignInClick }: FooterProp
               </li>
               <li>
                 <button
-                  onClick={scrollToFAQ}
+                  onClick={() => navigateToPage('/faq')}
                   className="flex items-center gap-2 text-gray-400 hover:text-white transition justify-center md:justify-start mx-auto md:mx-0"
                 >
                   <HelpCircle className="w-4 h-4" />
