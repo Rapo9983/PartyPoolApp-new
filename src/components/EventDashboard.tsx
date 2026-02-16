@@ -521,26 +521,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               </div>
             ) : (
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                {isCreator && (
-                  <div className="mb-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 text-xs text-white space-y-2">
-                    <p className="font-semibold">Debug: Verifica Valori</p>
-                    <p>DB current_amount (RAW): {event.current_amount} (tipo: {typeof event.current_amount})</p>
-                    <p>DB current_amount (Number): {currentAmount.toFixed(2)}€</p>
-                    <p>Calcolato da contributi: {totalFromContributions.toFixed(2)}€</p>
-                    <p className="text-yellow-200">Contributi confermati: {contributions.filter(c => c.payment_status === 'confirmed').length}</p>
-                    {Math.abs(currentAmount - totalFromContributions) > 0.01 && (
-                      <p className="text-red-300 font-bold">⚠️ DISCREPANZA: {Math.abs(currentAmount - totalFromContributions).toFixed(2)}€</p>
-                    )}
-                    <div className="mt-2 pt-2 border-t border-yellow-400/30">
-                      <p className="font-semibold mb-1">Lista completa contributi:</p>
-                      {contributions.map((c, i) => (
-                        <div key={c.id} className="text-[10px] bg-black/20 rounded p-1 mb-1">
-                          <p>#{i+1}: {c.contributor_name} - amount: {Number(c.amount).toFixed(2)}€ (base: {Number(c.base_amount).toFixed(2)}€ + support: {Number(c.support_amount).toFixed(2)}€) - Status: {c.payment_status}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">{t('event.progress')}</span>
                   <span className="text-lg font-bold">{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
@@ -590,19 +570,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                   <Users className="w-6 h-6 text-orange-500" />
                   {t('event.contributions')} ({contributions.length})
                 </h3>
-                {isCreator && contributions.length > 0 && (
-                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs">
-                    <p className="font-semibold mb-2 text-blue-800">Debug Contributi:</p>
-                    {contributions.map((c, idx) => (
-                      <div key={c.id} className="mb-1 text-blue-700">
-                        <strong>#{idx + 1}</strong>: {c.contributor_name} -
-                        amount: {Number(c.amount).toFixed(2)}€
-                        (base: {Number(c.base_amount).toFixed(2)}€ + support: {Number(c.support_amount).toFixed(2)}€) -
-                        Status: {c.payment_status}
-                      </div>
-                    ))}
-                  </div>
-                )}
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {contributions.length === 0 ? (
                     <p className="text-gray-500 text-sm">{t('event.noContributions')}</p>
