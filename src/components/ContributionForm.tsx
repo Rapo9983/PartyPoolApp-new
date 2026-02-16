@@ -51,6 +51,9 @@ export default function ContributionForm({ eventId, currency, contributionType, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (loading) return;
+
     setError('');
     setLoading(true);
 
@@ -60,6 +63,11 @@ export default function ContributionForm({ eventId, currency, contributionType, 
         : formData.contributorName;
 
       const baseAmount = parseFloat(formData.amount);
+
+      if (isNaN(baseAmount) || baseAmount <= 0) {
+        throw new Error('Invalid amount');
+      }
+
       const supportAmount = formData.addSupport ? 1 : 0;
       const totalAmount = baseAmount + supportAmount;
 
@@ -92,7 +100,6 @@ export default function ContributionForm({ eventId, currency, contributionType, 
       }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add contribution');
-    } finally {
       setLoading(false);
     }
   };

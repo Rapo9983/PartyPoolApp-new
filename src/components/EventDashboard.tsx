@@ -63,13 +63,41 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'contributions',
           filter: `event_id=eq.${event.id}`,
         },
-        () => {
-          loadEventData();
+        async () => {
+          const { data: contributionsData } = await supabase
+            .from('contributions')
+            .select('*')
+            .eq('event_id', event.id)
+            .order('created_at', { ascending: false });
+
+          if (contributionsData) {
+            setContributions(contributionsData);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'contributions',
+          filter: `event_id=eq.${event.id}`,
+        },
+        async () => {
+          const { data: contributionsData } = await supabase
+            .from('contributions')
+            .select('*')
+            .eq('event_id', event.id)
+            .order('created_at', { ascending: false });
+
+          if (contributionsData) {
+            setContributions(contributionsData);
+          }
         }
       )
       .subscribe();
@@ -256,6 +284,10 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const budgetGoal = Number(event.budget_goal) || 0;
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
   const eventUrl = window.location.href;
+
+  const totalFromContributions = contributions
+    .filter(c => c.payment_status === 'confirmed')
+    .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
   const giftImage = event.gift_url ? extractImageFromUrl(event.gift_url) : null;
   const celebrantImage = event.celebrant_image;
   const ogTitle = language === 'it'
@@ -489,6 +521,14 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               </div>
             ) : (
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                {isCreator && Math.abs(currentAmount - totalFromContributions) > 0.01 && (
+                  <div className="mb-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 text-xs text-white">
+                    <p className="font-semibold mb-1">Debug: Discrepanza rilevata</p>
+                    <p>DB: {formatCurrency(currentAmount, event.currency)}</p>
+                    <p>Calcolato: {formatCurrency(totalFromContributions, event.currency)}</p>
+                    <p className="mt-1 text-yellow-200">Numero contributi confermati: {contributions.filter(c => c.payment_status === 'confirmed').length}</p>
+                  </div>
+                )}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">{t('event.progress')}</span>
                   <span className="text-lg font-bold">{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
