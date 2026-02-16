@@ -361,29 +361,33 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 p-8 text-white">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex items-start gap-6">
-                <div className="relative">
+            <div className="flex justify-between items-start mb-6 flex-wrap">
+              <div className="flex items-start gap-4 md:gap-6 w-full md:w-auto">
+                <div className="relative flex-shrink-0">
                   {celebrantImage ? (
                     <img
                       src={celebrantImage}
                       alt={event.celebrant_name}
-                      className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl"
+                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-4 border-white shadow-xl"
+                      style={{
+                        objectFit: 'cover',
+                        objectPosition: 'center'
+                      }}
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                         e.currentTarget.nextElementSibling?.classList.remove('hidden');
                       }}
                     />
                   ) : null}
-                  <div className={`w-28 h-28 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white shadow-xl flex items-center justify-center ${celebrantImage ? 'hidden' : ''}`}>
-                    <Gift className="w-12 h-12 text-white" />
+                  <div className={`w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white shadow-xl flex items-center justify-center ${celebrantImage ? 'hidden' : ''}`}>
+                    <Gift className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
                   </div>
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white text-orange-600 px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white text-orange-600 px-2 sm:px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
                     {t('event.celebrantBadge')}
                   </div>
                 </div>
-                <div className="pt-2">
-                  <h1 className="text-4xl font-bold mb-1">{event.celebrant_name}</h1>
+                <div className="pt-2 flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 break-words">{event.celebrant_name}</h1>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -442,22 +446,28 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                   <Gift className="w-5 h-5" />
                   <span className="font-medium">{t('event.giftPreview')}</span>
                 </div>
-                <div className="flex gap-4 items-center">
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
                   {extractImageFromUrl(event.gift_url) && (
-                    <img
-                      src={extractImageFromUrl(event.gift_url) || ''}
-                      alt="Gift"
-                      className="w-32 h-32 object-contain bg-white rounded-lg"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
+                    <div className="w-full sm:w-32 aspect-square flex-shrink-0">
+                      <img
+                        src={extractImageFromUrl(event.gift_url) || ''}
+                        alt="Gift"
+                        className="w-full h-full bg-white rounded-lg"
+                        style={{
+                          objectFit: 'contain',
+                          objectPosition: 'center'
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
                   )}
                   <a
                     href={addAmazonAffiliateTag(event.gift_url)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-white text-orange-600 px-4 py-2 rounded-lg font-semibold hover:bg-white/90 transition"
+                    className="flex items-center justify-center gap-2 bg-white text-orange-600 px-4 py-2 rounded-lg font-semibold hover:bg-white/90 transition w-full sm:w-auto"
                   >
                     <ExternalLink className="w-4 h-4" />
                     {t('event.viewGift')}
