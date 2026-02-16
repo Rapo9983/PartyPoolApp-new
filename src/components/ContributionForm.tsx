@@ -216,9 +216,14 @@ export default function ContributionForm({ eventId, currency, contributionType, 
           )}
 
           <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">
-              {t('contribution.paymentMethod') || 'Metodo di pagamento'}
-            </label>
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900 mb-1">
+                {t('contribution.paymentMethod')}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {t('contribution.paymentMethodDesc')}
+              </p>
+            </div>
 
             <div className="space-y-2">
               <label className="flex items-start gap-3 p-4 border-2 border-blue-200 bg-blue-50 rounded-lg cursor-pointer hover:border-blue-400 transition">
@@ -233,10 +238,10 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 font-medium text-gray-900 mb-1">
                     <CreditCard className="w-4 h-4 text-blue-600" />
-                    <span>Pagamento Digitale</span>
-                    <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">Consigliato</span>
+                    <span>{t('contribution.digitalPayment')}</span>
+                    <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">{t('contribution.recommended')}</span>
                   </div>
-                  <p className="text-sm text-gray-600">PayPal, Satispay o bonifico</p>
+                  <p className="text-sm text-gray-600">{t('contribution.digitalPaymentDesc')}</p>
                 </div>
               </label>
 
@@ -252,10 +257,10 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 font-medium text-gray-900 mb-1">
                     <Wallet className="w-4 h-4 text-gray-600" />
-                    <span>Pagamento in Contanti</span>
+                    <span>{t('contribution.cashPayment')}</span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    Pagherò in contanti direttamente a {organizerName || 'l\'organizzatore'}
+                    {t('contribution.cashPaymentDesc').replace('{organizer}', organizerName || (t('contribution.anonymousHelp').includes('amico') ? 'l\'organizzatore' : 'the organizer'))}
                   </p>
                 </div>
               </label>
@@ -264,7 +269,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
             {formData.paymentMethod === 'cash' && eventDate && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800 mb-3">
-                  La tua quota verrà segnata come "promessa" fino a quando {organizerName || 'l\'organizzatore'} non confermerà di aver ricevuto il pagamento.
+                  {t('contribution.cashPromiseNote').replace('{organizer}', organizerName || (t('contribution.anonymousHelp').includes('amico') ? 'l\'organizzatore' : 'the organizer'))}
                 </p>
                 <button
                   type="button"
@@ -280,7 +285,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                       );
                       setReminderSet(true);
                     } else {
-                      alert('Per impostare promemoria, devi abilitare le notifiche nel browser');
+                      alert(t('contribution.notificationPermissionRequired'));
                     }
                   }}
                   className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-lg transition font-medium"
@@ -289,12 +294,12 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                   {reminderSet ? (
                     <>
                       <CalendarIcon className="w-4 h-4" />
-                      Promemoria impostato
+                      {t('contribution.reminderSet')}
                     </>
                   ) : (
                     <>
                       <Bell className="w-4 h-4" />
-                      Ricordami di portare i soldi alla festa
+                      {t('contribution.setReminder')}
                     </>
                   )}
                 </button>
