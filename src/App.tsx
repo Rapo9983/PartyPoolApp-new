@@ -11,8 +11,9 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import HowItWorks from './components/HowItWorks';
 import FAQ from './components/FAQ';
 import Navbar from './components/Navbar';
+import ResetPassword from './components/ResetPassword';
 
-type View = 'landing' | 'auth' | 'dashboard' | 'create-event' | 'edit-event' | 'view-event' | 'privacy-policy' | 'how-it-works' | 'faq';
+type View = 'landing' | 'auth' | 'dashboard' | 'create-event' | 'edit-event' | 'view-event' | 'privacy-policy' | 'how-it-works' | 'faq' | 'reset-password';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -34,6 +35,8 @@ function AppContent() {
       setView('how-it-works');
     } else if (path === '/faq') {
       setView('faq');
+    } else if (path === '/nuova-password' || path === '/reset-password') {
+      setView('reset-password');
     } else if (user) {
       const savedView = localStorage.getItem('currentView');
       const savedEventId = localStorage.getItem('editingEventId');
@@ -160,6 +163,10 @@ function AppContent() {
         </div>
       </>
     );
+  }
+
+  if (view === 'reset-password') {
+    return <ResetPassword onPasswordUpdated={handleBackToDashboard} />;
   }
 
   if (view === 'view-event' && eventSlug) {
