@@ -427,14 +427,14 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                 )}
 
                 <a
-                  href="https://buymeacoffee.com/carloravelk"
+                  href="https://buymeacoffee.com/partypool"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-white/10 hover:bg-white/20 rounded-xl p-4 block transition flex items-center justify-center gap-2"
                 >
                   <Coffee className="w-5 h-5 text-white" />
                   <span className="text-sm font-medium text-white">
-                    Ti è stato utile? Offrici un caffè
+                    Sostieni il progetto PartyPool
                   </span>
                 </a>
               </div>
@@ -563,7 +563,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                         </div>
                         {!event.is_supporter ? (
                           <a
-                            href="https://buymeacoffee.com/carloravelk"
+                            href="https://buymeacoffee.com/partypool"
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => {
