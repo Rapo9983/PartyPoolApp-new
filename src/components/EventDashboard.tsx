@@ -39,15 +39,17 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
   useEffect(() => {
     if (event) {
-      const progressPercentage = event.budget_goal > 0
-        ? Math.min((event.current_amount / event.budget_goal) * 100, 100)
+      const currentAmount = Number(event.current_amount) || 0;
+      const budgetGoal = Number(event.budget_goal) || 0;
+      const progressPercentage = budgetGoal > 0
+        ? Math.min((currentAmount / budgetGoal) * 100, 100)
         : 0;
 
       setTimeout(() => {
         setProgressWidth(progressPercentage);
-      }, 300);
+      }, 100);
     }
-  }, [event]);
+  }, [event?.current_amount, event?.budget_goal]);
 
   const loadEventData = async () => {
     setLoading(true);
@@ -64,7 +66,11 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
         return;
       }
 
-      setEvent(eventData);
+      setEvent({
+        ...eventData,
+        budget_goal: Number(eventData.budget_goal),
+        current_amount: Number(eventData.current_amount),
+      });
 
       const { data: contributionsData } = await supabase
         .from('contributions')
@@ -205,7 +211,9 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     );
   }
 
-  const progressPercentage = event.budget_goal > 0 ? Math.min((event.current_amount / event.budget_goal) * 100, 100) : 0;
+  const currentAmount = Number(event.current_amount) || 0;
+  const budgetGoal = Number(event.budget_goal) || 0;
+  const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
   const eventUrl = window.location.href;
   const giftImage = event.gift_url ? extractImageFromUrl(event.gift_url) : null;
   const celebrantImage = event.celebrant_image;
@@ -385,7 +393,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               </div>
             )}
 
-            {event.current_amount >= event.budget_goal && isCreator ? (
+            {currentAmount >= budgetGoal && isCreator ? (
               <div className="space-y-4">
                 <div className="bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 rounded-xl p-6">
                   <div className="flex items-center justify-center gap-3 mb-2">
@@ -394,7 +402,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                     <Gift className="w-6 h-6 text-white animate-bounce" />
                   </div>
                   <div className="text-center text-white/90 text-sm font-medium">
-                    {formatCurrency(event.current_amount, event.currency)} / {formatCurrency(event.budget_goal, event.currency)}
+                    {formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}
                   </div>
                 </div>
 
@@ -442,7 +450,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">{t('event.progress')}</span>
-                  <span className="text-lg font-bold">{formatCurrency(event.current_amount, event.currency)} / {formatCurrency(event.budget_goal, event.currency)}</span>
+                  <span className="text-lg font-bold">{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
                 </div>
                 <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden">
                   <div

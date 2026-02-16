@@ -44,7 +44,13 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (data) setEvents(data);
+      if (data) {
+        setEvents(data.map(event => ({
+          ...event,
+          budget_goal: Number(event.budget_goal),
+          current_amount: Number(event.current_amount),
+        })));
+      }
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -56,7 +62,9 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
     const seenGoals = JSON.parse(localStorage.getItem('goalReachedSeen') || '{}');
 
     const reachedEvent = events.find(event => {
-      const hasReachedGoal = event.current_amount >= event.budget_goal;
+      const currentAmount = Number(event.current_amount) || 0;
+      const budgetGoal = Number(event.budget_goal) || 0;
+      const hasReachedGoal = currentAmount >= budgetGoal && budgetGoal > 0;
       const notSeenYet = !seenGoals[event.id];
       return hasReachedGoal && notSeenYet;
     });
