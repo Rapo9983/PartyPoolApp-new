@@ -522,15 +522,23 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
             ) : (
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                 {isCreator && (
-                  <div className="mb-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 text-xs text-white">
-                    <p className="font-semibold mb-1">Debug: Verifica Valori</p>
+                  <div className="mb-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 text-xs text-white space-y-2">
+                    <p className="font-semibold">Debug: Verifica Valori</p>
                     <p>DB current_amount (RAW): {event.current_amount} (tipo: {typeof event.current_amount})</p>
                     <p>DB current_amount (Number): {currentAmount.toFixed(2)}€</p>
                     <p>Calcolato da contributi: {totalFromContributions.toFixed(2)}€</p>
-                    <p className="mt-1 text-yellow-200">Contributi confermati: {contributions.filter(c => c.payment_status === 'confirmed').length}</p>
+                    <p className="text-yellow-200">Contributi confermati: {contributions.filter(c => c.payment_status === 'confirmed').length}</p>
                     {Math.abs(currentAmount - totalFromContributions) > 0.01 && (
-                      <p className="mt-1 text-red-300 font-bold">⚠️ DISCREPANZA: {Math.abs(currentAmount - totalFromContributions).toFixed(2)}€</p>
+                      <p className="text-red-300 font-bold">⚠️ DISCREPANZA: {Math.abs(currentAmount - totalFromContributions).toFixed(2)}€</p>
                     )}
+                    <div className="mt-2 pt-2 border-t border-yellow-400/30">
+                      <p className="font-semibold mb-1">Lista completa contributi:</p>
+                      {contributions.map((c, i) => (
+                        <div key={c.id} className="text-[10px] bg-black/20 rounded p-1 mb-1">
+                          <p>#{i+1}: {c.contributor_name} - amount: {Number(c.amount).toFixed(2)}€ (base: {Number(c.base_amount).toFixed(2)}€ + support: {Number(c.support_amount).toFixed(2)}€) - Status: {c.payment_status}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <div className="flex justify-between items-center mb-2">
