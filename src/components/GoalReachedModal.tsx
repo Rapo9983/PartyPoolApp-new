@@ -88,7 +88,7 @@ export default function GoalReachedModal({ celebrantName, onClose }: GoalReached
           </div>
 
           <a
-            href="https://www.buymeacoffee.com/partypool"
+            href="https://buymeacoffee.com/carloravelk"
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:from-yellow-500 hover:to-orange-600 transition shadow-lg hover:shadow-xl text-center"

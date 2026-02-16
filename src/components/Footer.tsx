@@ -31,7 +31,7 @@ export default function Footer({ onCreateEventClick, onSignInClick }: FooterProp
               {t('footer.tagline')}
             </p>
             <a
-              href="https://www.buymeacoffee.com/partypool"
+              href="https://buymeacoffee.com/carloravelk"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-slate-900 px-4 py-2 rounded-lg font-semibold transition text-sm"
