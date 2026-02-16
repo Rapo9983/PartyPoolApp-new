@@ -98,9 +98,9 @@ export default function ContributionForm({ eventId, currency, contributionType, 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-        <div className="flex justify-between items-center p-6 border-b">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in my-8 max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center p-6 border-b flex-shrink-0">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
             {t('contribution.title')}
           </h2>
@@ -112,7 +112,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
           <div>
             <label htmlFor="contributorName" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <User className="w-4 h-4" />
@@ -303,7 +303,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                     {t('event.payWithPayPal')}
                   </p>
                   <a
-                    href={createPayPalLink(paypalEmail, getTotalAmount(), currency)}
+                    href={createPayPalLink(paypalEmail, getTotalAmount(), currency, organizerName ? `Regalo per ${organizerName}` : undefined)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full bg-[#0070ba] text-white py-3 rounded-lg font-semibold hover:bg-[#005ea6] transition text-center"
@@ -329,12 +329,6 @@ export default function ContributionForm({ eventId, currency, contributionType, 
               )}
             </div>
           )}
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">
-              {t('contribution.note')}
-            </p>
-          </div>
 
           <button
             type="submit"
