@@ -578,6 +578,19 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                   <Users className="w-6 h-6 text-orange-500" />
                   {t('event.contributions')} ({contributions.length})
                 </h3>
+                {isCreator && contributions.length > 0 && (
+                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs">
+                    <p className="font-semibold mb-2 text-blue-800">Debug Contributi:</p>
+                    {contributions.map((c, idx) => (
+                      <div key={c.id} className="mb-1 text-blue-700">
+                        <strong>#{idx + 1}</strong>: {c.contributor_name} -
+                        amount: {Number(c.amount).toFixed(2)}€
+                        (base: {Number(c.base_amount).toFixed(2)}€ + support: {Number(c.support_amount).toFixed(2)}€) -
+                        Status: {c.payment_status}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {contributions.length === 0 ? (
                     <p className="text-gray-500 text-sm">{t('event.noContributions')}</p>
