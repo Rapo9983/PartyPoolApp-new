@@ -38,6 +38,48 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   }, [slug]);
 
   useEffect(() => {
+    if (!event) return;
+
+    const channel = supabase
+      .channel(`event-updates-${event.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'events',
+          filter: `id=eq.${event.id}`,
+        },
+        (payload) => {
+          if (payload.new) {
+            setEvent({
+              ...payload.new as Event,
+              budget_goal: Number((payload.new as Event).budget_goal),
+              current_amount: Number((payload.new as Event).current_amount),
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contributions',
+          filter: `event_id=eq.${event.id}`,
+        },
+        () => {
+          loadEventData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [event?.id]);
+
+  useEffect(() => {
     if (event) {
       const currentAmount = Number(event.current_amount) || 0;
       const budgetGoal = Number(event.budget_goal) || 0;
@@ -100,7 +142,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
   const handleContributionAdded = () => {
     setShowContributeForm(false);
-    loadEventData();
   };
 
   const handleWishAdded = () => {
