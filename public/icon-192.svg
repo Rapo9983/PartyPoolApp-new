@@ -1,14 +1,45 @@
 <svg width="192" height="192" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" fill="#3b82f6"/>
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="giftGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fef3c7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
 
-  <g transform="translate(96, 96)">
-    <rect x="-34" y="0" width="68" height="52" rx="5" fill="white" opacity="0.95"/>
-    <rect x="-4.5" y="0" width="9" height="52" fill="#f59e0b" opacity="0.95"/>
-    <rect x="-34" y="19" width="68" height="9" fill="#f59e0b" opacity="0.95"/>
-    <circle cx="-11" cy="-8" r="7.5" fill="#ef4444" opacity="0.95"/>
-    <circle cx="11" cy="-8" r="7.5" fill="#ef4444" opacity="0.95"/>
-    <circle cx="0" cy="-9.5" r="5.5" fill="#dc2626" opacity="0.95"/>
-    <path d="M -11 -8 L -17 -17 L -13 -19 L -9.5 -11 Z" fill="#ef4444" opacity="0.9"/>
-    <path d="M 11 -8 L 17 -17 L 13 -19 L 9.5 -11 Z" fill="#ef4444" opacity="0.9"/>
+  <rect width="192" height="192" fill="url(#bgGrad)" rx="30"/>
+
+  <g transform="translate(96, 105)">
+    <g transform="translate(-30, -8) scale(0.8)">
+      <rect x="-13" y="-4" width="26" height="26" rx="3" fill="url(#giftGrad)" opacity="0.95"/>
+      <rect x="-2" y="-4" width="3" height="26" fill="#fbbf24"/>
+      <rect x="-13" y="7" width="26" height="3" fill="#fbbf24"/>
+      <circle cx="-5" cy="-8" r="3" fill="#f59e0b"/>
+      <circle cx="5" cy="-8" r="3" fill="#f59e0b"/>
+    </g>
+
+    <g transform="translate(0, -15)">
+      <rect x="-17" y="-6" width="34" height="34" rx="4" fill="url(#giftGrad)" opacity="0.98"/>
+      <rect x="-2" y="-6" width="4" height="34" fill="#f97316"/>
+      <rect x="-17" y="9" width="34" height="4" fill="#f97316"/>
+      <circle cx="-7" cy="-11" r="5" fill="#ef4444"/>
+      <circle cx="7" cy="-11" r="5" fill="#ef4444"/>
+      <circle cx="0" cy="-12" r="4" fill="#dc2626"/>
+    </g>
+
+    <g transform="translate(30, -4) scale(0.75)">
+      <rect x="-12" y="-3" width="24" height="24" rx="3" fill="url(#giftGrad)" opacity="0.95"/>
+      <rect x="-2" y="-3" width="3" height="24" fill="#ec4899"/>
+      <rect x="-12" y="7" width="24" height="3" fill="#ec4899"/>
+      <circle cx="-4" cy="-7" r="3" fill="#db2777"/>
+      <circle cx="4" cy="-7" r="3" fill="#db2777"/>
+    </g>
+  </g>
+
+  <g transform="translate(96, 52)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-weight="bold" font-size="45" fill="white" text-anchor="middle" opacity="0.95">PP</text>
   </g>
 </svg>

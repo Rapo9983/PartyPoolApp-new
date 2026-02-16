@@ -1,24 +1,46 @@
 <svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#3b82f6"/>
+  <defs>
+    <linearGradient id="maskBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="maskGift" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fef3c7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
 
-  <!-- Maskable safe area - 25% margin all around -->
-  <g transform="translate(256, 256)">
-    <!-- Gift box body - smaller to fit safe area -->
-    <rect x="-70" y="5" width="140" height="110" rx="10" fill="white" opacity="0.95"/>
+  <rect width="512" height="512" fill="url(#maskBg)"/>
 
-    <!-- Ribbon vertical -->
-    <rect x="-10" y="5" width="20" height="110" fill="#f59e0b" opacity="0.95"/>
+  <!-- Content positioned within safe zone (20% margin from edges) -->
+  <g transform="translate(256, 300)">
+    <g transform="translate(-65, -15) scale(0.7)">
+      <rect x="-30" y="-8" width="60" height="60" rx="7" fill="url(#maskGift)" opacity="0.95"/>
+      <rect x="-3" y="-8" width="6" height="60" fill="#fbbf24"/>
+      <rect x="-30" y="17" width="60" height="6" fill="#fbbf24"/>
+      <circle cx="-10" cy="-17" r="7" fill="#f59e0b"/>
+      <circle cx="10" cy="-17" r="7" fill="#f59e0b"/>
+    </g>
 
-    <!-- Ribbon horizontal -->
-    <rect x="-70" y="45" width="140" height="20" fill="#f59e0b" opacity="0.95"/>
+    <g transform="translate(0, -35)">
+      <rect x="-38" y="-12" width="76" height="76" rx="9" fill="url(#maskGift)" opacity="0.98"/>
+      <rect x="-4" y="-12" width="8" height="76" fill="#f97316"/>
+      <rect x="-38" y="22" width="76" height="8" fill="#f97316"/>
+      <circle cx="-15" cy="-24" r="10" fill="#ef4444"/>
+      <circle cx="15" cy="-24" r="10" fill="#ef4444"/>
+      <circle cx="0" cy="-27" r="8" fill="#dc2626"/>
+    </g>
 
-    <!-- Bow top -->
-    <circle cx="-24" cy="-15" r="16" fill="#ef4444" opacity="0.95"/>
-    <circle cx="24" cy="-15" r="16" fill="#ef4444" opacity="0.95"/>
-    <circle cx="0" cy="-20" r="12" fill="#dc2626" opacity="0.95"/>
+    <g transform="translate(65, -8) scale(0.65)">
+      <rect x="-28" y="-7" width="56" height="56" rx="7" fill="url(#maskGift)" opacity="0.95"/>
+      <rect x="-3" y="-7" width="6" height="56" fill="#ec4899"/>
+      <rect x="-28" y="15" width="56" height="6" fill="#ec4899"/>
+      <circle cx="-9" cy="-15" r="7" fill="#db2777"/>
+      <circle cx="9" cy="-15" r="7" fill="#db2777"/>
+    </g>
+  </g>
 
-    <!-- Bow ribbons -->
-    <path d="M -24 -15 L -35 -35 L -28 -40 L -20 -25 Z" fill="#ef4444" opacity="0.9"/>
-    <path d="M 24 -15 L 35 -35 L 28 -40 L 20 -25 Z" fill="#ef4444" opacity="0.9"/>
+  <g transform="translate(256, 160)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-weight="bold" font-size="100" fill="white" text-anchor="middle" opacity="0.95">PP</text>
   </g>
 </svg>

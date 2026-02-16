@@ -1,10 +1,17 @@
 <svg width="1125" height="2436" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1125 2436">
-  <rect width="1125" height="2436" fill="#3b82f6"/>
+  <defs>
+    <linearGradient id="splashBg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1125" height="2436" fill="url(#splashBg3)"/>
 
   <g transform="translate(562.5, 1050)">
     <rect x="-100" y="0" width="200" height="160" rx="14" fill="white" opacity="0.95"/>
-    <rect x="-13.5" y="0" width="27" height="160" fill="#f59e0b" opacity="0.95"/>
-    <rect x="-100" y="57" width="200" height="27" fill="#f59e0b" opacity="0.95"/>
+    <rect x="-13.5" y="0" width="27" height="160" fill="#f97316" opacity="0.95"/>
+    <rect x="-100" y="57" width="200" height="27" fill="#f97316" opacity="0.95"/>
     <circle cx="-33" cy="-22" r="22" fill="#ef4444" opacity="0.95"/>
     <circle cx="33" cy="-22" r="22" fill="#ef4444" opacity="0.95"/>
     <circle cx="0" cy="-27" r="16" fill="#dc2626" opacity="0.95"/>
