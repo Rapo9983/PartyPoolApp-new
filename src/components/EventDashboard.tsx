@@ -521,12 +521,16 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               </div>
             ) : (
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                {isCreator && Math.abs(currentAmount - totalFromContributions) > 0.01 && (
+                {isCreator && (
                   <div className="mb-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 text-xs text-white">
-                    <p className="font-semibold mb-1">Debug: Discrepanza rilevata</p>
-                    <p>DB: {formatCurrency(currentAmount, event.currency)}</p>
-                    <p>Calcolato: {formatCurrency(totalFromContributions, event.currency)}</p>
-                    <p className="mt-1 text-yellow-200">Numero contributi confermati: {contributions.filter(c => c.payment_status === 'confirmed').length}</p>
+                    <p className="font-semibold mb-1">Debug: Verifica Valori</p>
+                    <p>DB current_amount (RAW): {event.current_amount} (tipo: {typeof event.current_amount})</p>
+                    <p>DB current_amount (Number): {currentAmount.toFixed(2)}€</p>
+                    <p>Calcolato da contributi: {totalFromContributions.toFixed(2)}€</p>
+                    <p className="mt-1 text-yellow-200">Contributi confermati: {contributions.filter(c => c.payment_status === 'confirmed').length}</p>
+                    {Math.abs(currentAmount - totalFromContributions) > 0.01 && (
+                      <p className="mt-1 text-red-300 font-bold">⚠️ DISCREPANZA: {Math.abs(currentAmount - totalFromContributions).toFixed(2)}€</p>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between items-center mb-2">
