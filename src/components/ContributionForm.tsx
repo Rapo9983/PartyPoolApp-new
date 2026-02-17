@@ -88,6 +88,22 @@ export default function ContributionForm({ eventId, currency, contributionType, 
 
       if (insertError) throw insertError;
 
+      if (formData.paymentMethod !== 'cash') {
+        const { data: currentEvent } = await supabase
+          .from('events')
+          .select('current_amount')
+          .eq('id', eventId)
+          .maybeSingle();
+
+        if (currentEvent) {
+          const newAmount = Number(currentEvent.current_amount || 0) + baseAmount;
+          await supabase
+            .from('events')
+            .update({ current_amount: newAmount })
+            .eq('id', eventId);
+        }
+      }
+
       confetti({
         particleCount: 200,
         spread: 100,
