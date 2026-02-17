@@ -35,14 +35,16 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
         supabase.from('wishes').select('*').eq('event_id', eventData.id).order('created_at', { ascending: false })
       ]);
 
-      setEvent(eventData);
-      setContributions(contributionsRes.data || []);
-      setWishes(wishesRes.data || []);
+      const contrs = contributionsRes.data || [];
       
-      // Calcolo immediato barra
+      // CALCOLO PURO: Sommiamo solo i base_amount per il budget, ignorando i caffè
+      const pureAmount = contrs.reduce((sum, c) => sum + (Number(c.base_amount) || 0), 0);
       const goal = Number(eventData.budget_goal) || 0;
-      const current = Number(eventData.current_amount) || 0;
-      setProgressWidth(goal > 0 ? Math.min((current / goal) * 100, 100) : 0);
+
+      setEvent({ ...eventData, current_amount: pureAmount }); // Sovrascriviamo il totale con quello calcolato dai base_amount
+      setContributions(contrs);
+      setWishes(wishesRes.data || []);
+      setProgressWidth(goal > 0 ? Math.min((pureAmount / goal) * 100, 100) : 0);
     } finally {
       setLoading(false);
     }
@@ -53,19 +55,19 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
   }, [slug]);
 
+  // Realtime "Intelligente": Non aggiorna tutto, ma scatena il ricaricamento dei dati puliti
   useEffect(() => {
     if (!event?.id || channelRef.current) return;
 
-    channelRef.current = supabase.channel(`event-realtime-${event.id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'events', filter: `id=eq.${event.id}` }, (payload) => {
-        const updated = payload.new as Event;
-        setEvent(updated);
-        const goal = Number(updated.budget_goal) || 0;
-        const current = Number(updated.current_amount) || 0;
-        setProgressWidth(goal > 0 ? Math.min((current / goal) * 100, 100) : 0);
-      })
+    channelRef.current = supabase.channel(`event-v3-${event.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions', filter: `event_id=eq.${event.id}` }, () => {
+        // Quando cambia un contributo, ricarichiamo tutto per ricalcolare le somme correttamente
         loadEventData(false);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'events', filter: `id=eq.${event.id}` }, (payload) => {
+        // Se cambia l'obiettivo (budget_goal), aggiorniamo l'evento
+        const updated = payload.new as Event;
+        setEvent(prev => prev ? { ...prev, budget_goal: updated.budget_goal } : null);
       })
       .subscribe();
   }, [event?.id]);
@@ -73,7 +75,9 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
   if (loading) return <div className="min-h-screen flex items-center justify-center text-orange-500 font-black">CARICAMENTO...</div>;
   if (!event) return <div className="min-h-screen flex items-center justify-center font-black">EVENTO NON TROVATO</div>;
 
+  // Calcolo caffè totale per il badge giallo
   const totalCoffee = contributions.reduce((sum, c) => sum + (Number(c.support_amount) || 0), 0);
+  const currentAmount = event.current_amount || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50">
@@ -86,7 +90,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
         </div>
 
         <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-white/50">
-          {/* Header Premium Originale */}
           <div className="bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 p-8 md:p-12 text-white relative">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-8 relative z-10">
               <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
@@ -99,7 +102,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
                   <h1 className="text-5xl md:text-6xl font-black mb-2 tracking-tighter drop-shadow-xl uppercase">{event.celebrant_name}</h1>
                   <div className="flex flex-wrap justify-center sm:justify-start gap-3 font-black opacity-90">
                     <span className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest backdrop-blur-md"><Calendar className="w-4 h-4" /> {new Date(event.event_date).toLocaleDateString()}</span>
-                    {event.location && <span className="flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest backdrop-blur-md"><MapPin className="w-4 h-4" /> {event.location}</span>}
                   </div>
                 </div>
               </div>
@@ -109,12 +111,12 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
               </div>
             </div>
 
-            {/* Box Budget Glassmorphism Originale */}
+            {/* Box Budget Corretto: Mostra currentAmount che ora è solo la somma dei regali (base_amount) */}
             <div className="mt-12 bg-white/10 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-10 border border-white/30 shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
               <div className="flex justify-between items-end mb-6">
                 <div>
-                  <p className="text-white/80 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Budget Raggiunto</p>
-                  <span className="text-5xl font-black tracking-tighter">{formatCurrency(event.current_amount, event.currency)}</span>
+                  <p className="text-white/80 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Budget Regali</p>
+                  <span className="text-5xl font-black tracking-tighter">{formatCurrency(currentAmount, event.currency)}</span>
                 </div>
                 <div className="text-right">
                   <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1 text-right">Obiettivo</p>
@@ -135,49 +137,40 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
             </div>
           </div>
 
-          {/* Sezione Contenuti */}
           <div className="p-8 md:p-16">
             <div className="grid sm:grid-cols-2 gap-6 mb-16">
-              <button onClick={() => setShowContributeForm(true)} className="group bg-gradient-to-br from-orange-500 to-pink-600 text-white p-8 rounded-[2rem] font-black text-2xl shadow-[0_15px_30px_-5px_rgba(249,115,22,0.4)] hover:shadow-[0_20px_40px_-5px_rgba(249,115,22,0.6)] hover:-translate-y-1 transition-all active:scale-95 uppercase tracking-tighter">Regala Ora</button>
-              <button onClick={() => setShowWishForm(true)} className="group bg-gradient-to-br from-yellow-500 to-orange-500 text-white p-8 rounded-[2rem] font-black text-2xl shadow-[0_15px_30px_-5px_rgba(234,179,8,0.4)] hover:shadow-[0_20px_40px_-5px_rgba(234,179,8,0.6)] hover:-translate-y-1 transition-all active:scale-95 uppercase tracking-tighter">Fai gli Auguri</button>
+              <button onClick={() => setShowContributeForm(true)} className="bg-gradient-to-br from-orange-500 to-pink-600 text-white p-8 rounded-[2rem] font-black text-2xl shadow-xl hover:-translate-y-1 transition-all active:scale-95 uppercase tracking-tighter">Regala Ora</button>
+              <button onClick={() => setShowWishForm(true)} className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white p-8 rounded-[2rem] font-black text-2xl shadow-xl hover:-translate-y-1 transition-all active:scale-95 uppercase tracking-tighter">Fai gli Auguri</button>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-16">
               <section>
-                <h3 className="flex items-center gap-3 text-3xl font-black text-gray-800 mb-10 uppercase tracking-tighter border-l-8 border-orange-500 pl-4">Contributi</h3>
+                <h3 className="text-3xl font-black text-gray-800 mb-10 uppercase tracking-tighter border-l-8 border-orange-500 pl-4">Partecipanti</h3>
                 <div className="space-y-4 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
-                  {contributions.length === 0 ? (
-                    <div className="text-center py-16 bg-gray-50 rounded-[2rem] border-4 border-dashed border-gray-100 text-gray-300 font-black uppercase tracking-widest text-xs">Ancora nessun regalo</div>
-                  ) : (
-                    contributions.map(c => (
-                      <div key={c.id} className="bg-white border-2 border-gray-50 p-6 rounded-[1.5rem] flex justify-between items-center shadow-sm hover:border-orange-200 transition-all">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-gradient-to-br from-orange-100 to-pink-100 rounded-2xl flex items-center justify-center text-orange-600 font-black text-xl shadow-inner">{c.contributor_name.charAt(0).toUpperCase()}</div>
-                          <div>
-                            <div className="font-black text-gray-800 text-lg flex items-center gap-2">{c.contributor_name} {Number(c.support_amount) > 0 && <Coffee className="w-4 h-4 text-orange-400" />}</div>
-                            <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">{new Date(c.created_at).toLocaleDateString()}</div>
-                          </div>
+                  {contributions.map(c => (
+                    <div key={c.id} className="bg-white border-2 border-gray-50 p-6 rounded-[1.5rem] flex justify-between items-center shadow-sm hover:border-orange-200 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 font-black text-xl">{c.contributor_name.charAt(0).toUpperCase()}</div>
+                        <div>
+                          <div className="font-black text-gray-800 text-lg flex items-center gap-2">{c.contributor_name} {Number(c.support_amount) > 0 && <Coffee className="w-4 h-4 text-orange-400" />}</div>
+                          <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">{new Date(c.created_at).toLocaleDateString()}</div>
                         </div>
-                        <div className="text-orange-600 font-black text-2xl tracking-tighter">{formatCurrency(Number(c.base_amount), event.currency)}</div>
                       </div>
-                    ))
-                  )}
+                      <div className="text-orange-600 font-black text-2xl tracking-tighter">{formatCurrency(Number(c.base_amount), event.currency)}</div>
+                    </div>
+                  ))}
                 </div>
               </section>
 
               <section>
-                <h3 className="flex items-center gap-3 text-3xl font-black text-gray-800 mb-10 uppercase tracking-tighter border-l-8 border-pink-500 pl-4">Auguri</h3>
+                <h3 className="text-3xl font-black text-gray-800 mb-10 uppercase tracking-tighter border-l-8 border-pink-500 pl-4">Auguri</h3>
                 <div className="space-y-6 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
-                  {wishes.length === 0 ? (
-                    <div className="text-center py-16 bg-gray-50 rounded-[2rem] border-4 border-dashed border-gray-100 text-gray-300 font-black uppercase tracking-widest text-xs">Nessun augurio ricevuto</div>
-                  ) : (
-                    wishes.map(w => (
-                      <div key={w.id} className="bg-pink-50/30 border-2 border-pink-100/50 p-8 rounded-[2rem] shadow-sm">
-                        <div className="font-black text-pink-600 text-[10px] uppercase tracking-[0.3em] mb-4">{w.author_name}</div>
-                        <p className="text-gray-700 italic font-bold text-lg leading-relaxed">"{w.message}"</p>
-                      </div>
-                    ))
-                  )}
+                  {wishes.map(w => (
+                    <div key={w.id} className="bg-pink-50/30 border-2 border-pink-100/50 p-8 rounded-[2rem]">
+                      <div className="font-black text-pink-600 text-[10px] uppercase tracking-[0.3em] mb-4">{w.author_name}</div>
+                      <p className="text-gray-700 italic font-bold text-lg leading-relaxed">"{w.message}"</p>
+                    </div>
+                  ))}
                 </div>
               </section>
             </div>
@@ -185,8 +178,8 @@ export default function EventDashboard({ slug, onBack, onEdit }: { slug: string;
         </div>
       </div>
 
-      {showContributeForm && <ContributionForm eventId={event.id} currency={event.currency} budgetGoal={event.budget_goal} paypalEmail={event.paypal_email} satispayId={event.satispay_id} onClose={() => setShowContributeForm(false)} onSuccess={() => setShowContributeForm(false)} />}
-      {showWishForm && <WishForm eventId={event.id} onClose={() => setShowWishForm(false)} onSuccess={() => setShowWishForm(false)} />}
+      {showContributeForm && <ContributionForm eventId={event.id} currency={event.currency} budgetGoal={event.budget_goal} paypalEmail={event.paypal_email} satispayId={event.satispay_id} onClose={() => setShowContributeForm(false)} onSuccess={() => { setShowContributeForm(false); loadEventData(false); }} />}
+      {showWishForm && <WishForm eventId={event.id} onClose={() => setShowWishForm(false)} onSuccess={() => { setShowWishForm(false); loadEventData(false); }} />}
       {showQRCode && <QRCodeModal url={window.location.href} eventName={event.celebrant_name} onClose={() => setShowQRCode(false)} />}
       <Footer />
     </div>
