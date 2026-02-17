@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { createPayPalLink, formatCurrency } from '../lib/utils';
+import { createPayPalLink, formatCurrency, roundCurrency } from '../lib/utils';
 import { requestNotificationPermission, scheduleReminder } from '../lib/affiliateUtils';
 import SatispayPopup from './SatispayPopup';
 import confetti from 'canvas-confetti';
@@ -46,7 +46,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
   const getTotalAmount = () => {
     const base = parseFloat(formData.amount) || 0;
     const support = formData.addSupport ? 1 : 0;
-    return base + support;
+    return roundCurrency(base + support);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,14 +62,14 @@ export default function ContributionForm({ eventId, currency, contributionType, 
         ? (t('contribution.anonymousHelp').includes('amico') ? 'Un amico' : 'A friend')
         : formData.contributorName;
 
-      const baseAmount = parseFloat(formData.amount);
+      const baseAmount = roundCurrency(parseFloat(formData.amount));
 
       if (isNaN(baseAmount) || baseAmount <= 0) {
         throw new Error('Invalid amount');
       }
 
       const supportAmount = formData.addSupport ? 1 : 0;
-      const totalAmount = baseAmount + supportAmount;
+      const totalAmount = roundCurrency(baseAmount + supportAmount);
 
       const { error: insertError } = await supabase
         .from('contributions')
@@ -89,19 +89,13 @@ export default function ContributionForm({ eventId, currency, contributionType, 
       if (insertError) throw insertError;
 
       if (formData.paymentMethod !== 'cash') {
-        const { data: currentEvent } = await supabase
-          .from('events')
-          .select('current_amount')
-          .eq('id', eventId)
-          .maybeSingle();
+        const { error: rpcError } = await supabase
+          .rpc('increment_event_amount', {
+            event_id: eventId,
+            amount: baseAmount
+          });
 
-        if (currentEvent) {
-          const newAmount = Number(currentEvent.current_amount || 0) + baseAmount;
-          await supabase
-            .from('events')
-            .update({ current_amount: newAmount })
-            .eq('id', eventId);
-        }
+        if (rpcError) throw rpcError;
       }
 
       confetti({
@@ -121,10 +115,10 @@ export default function ContributionForm({ eventId, currency, contributionType, 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in my-8 max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b flex-shrink-0">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in my-2 sm:my-8 max-h-[85vh] flex flex-col">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b flex-shrink-0">
+          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
             {t('contribution.title')}
           </h2>
           <button
@@ -135,7 +129,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           <div>
             <label htmlFor="contributorName" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <User className="w-4 h-4" />
@@ -358,13 +352,15 @@ export default function ContributionForm({ eventId, currency, contributionType, 
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? t('contribution.processing') : t('contribution.submit')}
-          </button>
+          <div className="pt-2 pb-1">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? t('contribution.processing') : t('contribution.submit')}
+            </button>
+          </div>
         </form>
       </div>
 
