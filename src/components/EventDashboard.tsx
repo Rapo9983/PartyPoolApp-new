@@ -280,8 +280,9 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     );
   }
 
-  const currentAmount = Number(event.current_amount) || 0;
-  const budgetGoal = Number(event.budget_goal) || 0;
+ const currentAmount = contributions
+    .filter(c => c.payment_status === 'confirmed')
+    .reduce((sum, c) => sum + (Number(c.base_amount) || 0), 0);
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
   const eventUrl = window.location.href;
 
