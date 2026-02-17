@@ -78,6 +78,20 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
           if (contributionsData) {
             setContributions(contributionsData);
           }
+
+          const { data: eventData } = await supabase
+            .from('events')
+            .select('*')
+            .eq('id', event.id)
+            .maybeSingle();
+
+          if (eventData) {
+            setEvent({
+              ...eventData,
+              budget_goal: Number(eventData.budget_goal),
+              current_amount: Number(eventData.current_amount),
+            });
+          }
         }
       )
       .on(
@@ -97,6 +111,20 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
           if (contributionsData) {
             setContributions(contributionsData);
+          }
+
+          const { data: eventData } = await supabase
+            .from('events')
+            .select('*')
+            .eq('id', event.id)
+            .maybeSingle();
+
+          if (eventData) {
+            setEvent({
+              ...eventData,
+              budget_goal: Number(eventData.budget_goal),
+              current_amount: Number(eventData.current_amount),
+            });
           }
         }
       )
