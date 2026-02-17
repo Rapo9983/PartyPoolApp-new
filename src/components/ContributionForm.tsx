@@ -34,7 +34,6 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
     paymentMethod: 'digital' as 'digital' | 'cash',
   });
 
-  // Funzione helper per arrotondare correttamente al centesimo
   const roundToTwo = (num: number) => Math.round(num * 100) / 100;
 
   const getTotalAmount = () => {
@@ -56,7 +55,6 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
         throw new Error('Invalid amount');
       }
 
-      // ARROTONDAMENTO FORZATO prima dell'invio
       const baseAmount = roundToTwo(rawBaseAmount);
       const supportAmount = formData.addSupport ? 1 : 0;
       const totalAmount = roundToTwo(baseAmount + supportAmount);
@@ -193,15 +191,29 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
             </label>
           </div>
 
-          {formData.paymentMethod === 'digital' && paypalEmail && formData.amount && (
-            <a
-              href={createPayPalLink(paypalEmail, getTotalAmount(), currency)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full bg-[#0070ba] text-white py-3 rounded-xl font-bold text-center hover:opacity-90 transition"
-            >
-              Paga con PayPal ({formatCurrency(getTotalAmount(), currency)})
-            </a>
+          {/* PULSANTI DI PAGAMENTO DIGITALI */}
+          {formData.paymentMethod === 'digital' && formData.amount && parseFloat(formData.amount) > 0 && (
+            <div className="grid grid-cols-1 gap-2">
+              {paypalEmail && (
+                <a
+                  href={createPayPalLink(paypalEmail, getTotalAmount(), currency)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-[#0070ba] text-white py-3 rounded-xl font-bold text-center hover:opacity-90 transition"
+                >
+                  Paga con PayPal ({formatCurrency(getTotalAmount(), currency)})
+                </a>
+              )}
+              {satispayId && (
+                <button
+                  type="button"
+                  onClick={() => setShowSatispayPopup(true)}
+                  className="w-full bg-[#fa3e5a] text-white py-3 rounded-xl font-bold text-center hover:opacity-90 transition flex items-center justify-center gap-2"
+                >
+                  Paga con Satispay
+                </button>
+              )}
+            </div>
           )}
 
           <button
@@ -213,6 +225,15 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
           </button>
         </form>
       </div>
+
+      {showSatispayPopup && satispayId && (
+        <SatispayPopup
+          satispayId={satispayId}
+          amount={getTotalAmount().toString()}
+          currency={currency}
+          onClose={() => setShowSatispayPopup(false)}
+        />
+      )}
     </div>
   );
 }
