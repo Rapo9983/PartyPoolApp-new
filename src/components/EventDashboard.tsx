@@ -29,7 +29,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const [showWishForm, setShowWishForm] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [progressWidth, setProgressWidth] = useState(0);
-  const [showPurchaseMessage, setShowPurchaseMessage] = useState(false);
 
   const isCreator = user && event ? user.id === event.creator_id : false;
 
@@ -69,7 +68,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     loadEventData();
   }, [slug]);
 
-  // FIX REALTIME: Unico listener pulito
+  // Sincronizzazione Realtime
   useEffect(() => {
     if (!event?.id) return;
 
@@ -93,7 +92,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
         'postgres_changes',
         { event: '*', schema: 'public', table: 'contributions', filter: `event_id=eq.${event.id}` },
         () => {
-          loadEventData(false); // Ricarica liste e totali senza mostrare il caricamento
+          loadEventData(false); 
         }
       )
       .subscribe();
@@ -103,7 +102,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     };
   }, [event?.id]);
 
-  // Barra di avanzamento fluida
+  // Barra di avanzamento
   useEffect(() => {
     if (event) {
       const goal = Number(event.budget_goal) || 0;
@@ -113,7 +112,9 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     }
   }, [event?.current_amount, event?.budget_goal]);
 
-  // --- GLI ALTRI METODI (handleShare, handleWhatsAppShare, ecc.) rimangono quelli originali ---
+  // --- CALCOLO TOTALE CAFFE' ---
+  const totalCoffee = contributions.reduce((sum, c) => sum + (Number(c.support_amount) || 0), 0);
+
   const handleContributionAdded = () => {
     setShowContributeForm(false);
     loadEventData(false);
@@ -132,35 +133,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
       await navigator.clipboard.writeText(url);
       alert('Link copied!');
     }
-  };
-
-  const handleAddToCalendar = () => {
-    if (!event) return;
-    const eventUrl = window.location.href;
-    const title = `Festa di ${event.celebrant_name}`;
-    const description = `${event.description}\n\nPartecipa: ${eventUrl}`;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.open(createGoogleCalendarUrl(title, event.event_date, description, eventUrl), '_blank');
-    } else {
-      downloadCalendarFile(`festa-${event.celebrant_name}.ics`, generateCalendarEvent(title, event.event_date, description, eventUrl));
-    }
-  };
-
-  const handleConfirmCashPayment = async (contributionId: string) => {
-    try {
-      const { error } = await supabase.from('contributions').update({ payment_status: 'confirmed' }).eq('id', contributionId);
-      if (error) throw error;
-      loadEventData(false);
-    } catch (error) {
-      alert('Errore conferma pagamento');
-    }
-  };
-
-  const handleWhatsAppShare = () => {
-    if (!event) return;
-    const message = t('event.whatsappMessage').replace('{name}', event.celebrant_name).replace('{url}', window.location.href);
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleDeleteEvent = async () => {
@@ -182,20 +154,16 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const currentAmount = Number(event.current_amount) || 0;
   const budgetGoal = Number(event.budget_goal) || 0;
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
-  const giftImage = event.gift_url ? extractImageFromUrl(event.gift_url) : null;
   const celebrantImage = event.celebrant_image;
-  const ogImage = celebrantImage || giftImage || 'https://images.pexels.com/photos/1729797/pexels-photo-1729797.jpeg?auto=compress&cs=tinysrgb&w=1200';
 
   return (
     <>
       <Helmet>
         <title>{`Party for ${event.celebrant_name}`}</title>
-        <meta property="og:image" content={ogImage} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 p-4">
         <div className="max-w-4xl mx-auto pt-8 pb-12">
-          {/* Header UI */}
           <div className="mb-6 flex justify-between items-center">
             {onBack && <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900"><ArrowLeft className="w-5 h-5" /> {t('event.backButton')}</button>}
             {isCreator && (
@@ -207,20 +175,18 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            {/* Banner & Progress Bar */}
+            {/* Header / Banner */}
             <div className="bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 p-8 text-white">
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-start gap-6">
-                  <div className="relative">
-                    {celebrantImage ? (
-                      <img src={celebrantImage} className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover" />
-                    ) : (
-                      <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-white flex items-center justify-center"><Gift className="w-12 h-12 text-white" /></div>
-                    )}
-                  </div>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-6">
+                <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                  {celebrantImage ? (
+                    <img src={celebrantImage} className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover" />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-white flex items-center justify-center"><Gift className="w-12 h-12 text-white" /></div>
+                  )}
                   <div>
                     <h1 className="text-4xl font-bold mb-1">{event.celebrant_name}</h1>
-                    <div className="flex flex-wrap gap-4 text-white/90">
+                    <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-white/90">
                        <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(event.event_date).toLocaleDateString()}</span>
                        {event.location && <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.location}</span>}
                     </div>
@@ -232,19 +198,29 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                 </div>
               </div>
 
-              {/* BARRA DEL BUDGET */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              {/* BARRA DEL BUDGET & CONTATORE CAFFE' */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">{t('event.progress')}</span>
                   <span className="text-lg font-bold">{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
                 </div>
-                <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden">
+                <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden mb-2">
                   <div 
                     className="bg-white h-full rounded-full transition-all duration-1000 ease-out" 
                     style={{ width: `${progressWidth}%` }}
                   />
                 </div>
-                <div className="text-right text-sm mt-1 text-white/80">{progressPercentage.toFixed(1)}% {t('event.reached')}</div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-white/80">{progressPercentage.toFixed(1)}% {t('event.reached')}</div>
+                  
+                  {/* CONTATORE CAFFE' */}
+                  {totalCoffee > 0 && (
+                    <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                      <Coffee className="w-4 h-4 text-yellow-300" />
+                      <span>{totalCoffee} {totalCoffee === 1 ? 'caffè offerto!' : 'caffè offerti!'}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -265,9 +241,12 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                   <h3 className="flex items-center gap-2 text-xl font-bold mb-4"><Users className="text-orange-500" /> {t('event.contributions')} ({contributions.length})</h3>
                   <div className="space-y-3 max-h-80 overflow-y-auto">
                     {contributions.map(c => (
-                      <div key={c.id} className="bg-gray-50 p-3 rounded-lg flex justify-between">
+                      <div key={c.id} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
                         <div>
-                          <div className="font-bold">{c.contributor_name}</div>
+                          <div className="font-bold flex items-center gap-2">
+                            {c.contributor_name}
+                            {Number(c.support_amount) > 0 && <Coffee className="w-4 h-4 text-orange-400" title="Ha offerto un caffè!" />}
+                          </div>
                           <div className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString()}</div>
                         </div>
                         <div className="text-orange-600 font-bold">{formatCurrency(Number(c.base_amount), event.currency)}</div>
