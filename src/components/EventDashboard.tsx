@@ -102,17 +102,17 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     };
   }, [event?.id]);
 
-  // Barra di avanzamento
+  // Barra di avanzamento fluida con fix arrotondamento
   useEffect(() => {
     if (event) {
-      const goal = Number(event.budget_goal) || 0;
-      const current = Number(event.current_amount) || 0;
+      const goal = Math.round((Number(event.budget_goal) || 0) * 100) / 100;
+      const current = Math.round((Number(event.current_amount) || 0) * 100) / 100;
       const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
       setProgressWidth(percentage);
     }
   }, [event?.current_amount, event?.budget_goal]);
 
-  // --- CALCOLO TOTALE CAFFE' ---
+  // Calcolo Totale Caffè
   const totalCoffee = contributions.reduce((sum, c) => sum + (Number(c.support_amount) || 0), 0);
 
   const handleContributionAdded = () => {
@@ -151,8 +151,9 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   if (loading) return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
   if (!event) return <div className="min-h-screen flex items-center justify-center p-4">Event not found</div>;
 
-  const currentAmount = Number(event.current_amount) || 0;
-  const budgetGoal = Number(event.budget_goal) || 0;
+  // FIX ARROTONDAMENTO PER VISUALIZZAZIONE
+  const currentAmount = Math.round((Number(event.current_amount) || 0) * 100) / 100;
+  const budgetGoal = Math.round((Number(event.budget_goal) || 0) * 100) / 100;
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
   const celebrantImage = event.celebrant_image;
 
@@ -175,7 +176,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            {/* Header / Banner */}
             <div className="bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 p-8 text-white">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-6">
                 <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
@@ -198,11 +198,12 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                 </div>
               </div>
 
-              {/* BARRA DEL BUDGET & CONTATORE CAFFE' */}
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">{t('event.progress')}</span>
-                  <span className="text-lg font-bold">{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
+                  <span className="text-lg font-bold">
+                    {formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}
+                  </span>
                 </div>
                 <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden mb-2">
                   <div 
@@ -213,7 +214,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-white/80">{progressPercentage.toFixed(1)}% {t('event.reached')}</div>
                   
-                  {/* CONTATORE CAFFE' */}
                   {totalCoffee > 0 && (
                     <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full text-sm font-bold animate-pulse">
                       <Coffee className="w-4 h-4 text-yellow-300" />
@@ -224,7 +224,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               </div>
             </div>
 
-            {/* Pulsanti Azione */}
             <div className="p-8">
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <button onClick={() => setShowContributeForm(true)} className="bg-gradient-to-r from-orange-500 to-pink-500 text-white py-4 rounded-xl font-bold hover:shadow-lg transition">
@@ -235,7 +234,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                 </button>
               </div>
 
-              {/* Liste Contributi e Auguri */}
               <div className="grid md:grid-cols-2 gap-8 mt-8">
                 <div>
                   <h3 className="flex items-center gap-2 text-xl font-bold mb-4"><Users className="text-orange-500" /> {t('event.contributions')} ({contributions.length})</h3>
@@ -245,7 +243,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                         <div>
                           <div className="font-bold flex items-center gap-2">
                             {c.contributor_name}
-                            {Number(c.support_amount) > 0 && <Coffee className="w-4 h-4 text-orange-400" title="Ha offerto un caffè!" />}
+                            {Number(c.support_amount) > 0 && <Coffee className="w-4 h-4 text-orange-400" />}
                           </div>
                           <div className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString()}</div>
                         </div>
@@ -270,7 +268,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
           </div>
         </div>
 
-        {/* Modali */}
         {showContributeForm && <ContributionForm eventId={event.id} currency={event.currency} budgetGoal={event.budget_goal} paypalEmail={event.paypal_email} onClose={() => setShowContributeForm(false)} onSuccess={handleContributionAdded} />}
         {showWishForm && <WishForm eventId={event.id} onClose={() => setShowWishForm(false)} onSuccess={handleWishAdded} />}
         {showQRCode && <QRCodeModal url={window.location.href} eventName={event.celebrant_name} onClose={() => setShowQRCode(false)} />}
