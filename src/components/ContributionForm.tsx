@@ -45,15 +45,12 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-
     setError('');
     setLoading(true);
 
     try {
       const rawBaseAmount = parseFloat(formData.amount);
-      if (isNaN(rawBaseAmount) || rawBaseAmount <= 0) {
-        throw new Error('Invalid amount');
-      }
+      if (isNaN(rawBaseAmount) || rawBaseAmount <= 0) throw new Error('Invalid amount');
 
       const baseAmount = roundToTwo(rawBaseAmount);
       const supportAmount = formData.addSupport ? 1 : 0;
@@ -80,16 +77,8 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
 
       if (insertError) throw insertError;
 
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-
-      setTimeout(() => {
-        onSuccess();
-      }, 1000);
-
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+      setTimeout(() => onSuccess(), 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add contribution');
       setLoading(false);
@@ -103,81 +92,42 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
           <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
             {t('contribution.title')}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
-          </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+          {/* Nome e Anonimo */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <User className="w-4 h-4" /> {t('contribution.yourName')}
-            </label>
-            <input
-              type="text"
-              value={formData.contributorName}
-              onChange={(e) => setFormData({ ...formData, contributorName: e.target.value })}
-              required={!formData.isAnonymous}
-              disabled={formData.isAnonymous}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none disabled:bg-gray-100"
-            />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><User className="w-4 h-4" /> {t('contribution.yourName')}</label>
+            <input type="text" value={formData.contributorName} onChange={(e) => setFormData({ ...formData, contributorName: e.target.value })} required={!formData.isAnonymous} disabled={formData.isAnonymous} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none disabled:bg-gray-100" />
             <div className="mt-2 flex items-center gap-2">
-              <input
-                id="isAnon"
-                type="checkbox"
-                checked={formData.isAnonymous}
-                onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })}
-                className="w-4 h-4 text-orange-500"
-              />
+              <input id="isAnon" type="checkbox" checked={formData.isAnonymous} onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })} className="w-4 h-4 text-orange-500" />
               <label htmlFor="isAnon" className="text-sm text-gray-600">{t('contribution.anonymous')}</label>
             </div>
           </div>
 
+          {/* Importo e Caffè */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">{t('contribution.amount')}</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">{currency}</span>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                required
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-              />
+              <input type="number" step="0.01" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" />
             </div>
-            
             <div className="mt-3 bg-orange-50 rounded-lg p-3 border border-orange-100">
               <div className="flex items-start gap-2">
-                <input
-                  id="coffee"
-                  type="checkbox"
-                  checked={formData.addSupport}
-                  onChange={(e) => setFormData({ ...formData, addSupport: e.target.checked })}
-                  className="mt-1"
-                />
-                <label htmlFor="coffee" className="text-sm cursor-pointer">
-                  <div className="font-bold flex items-center gap-1 text-orange-700">
-                    <Coffee className="w-4 h-4" /> {t('contribution.addSupport')}
-                  </div>
-                  <p className="text-xs text-orange-600">{t('contribution.addSupportDesc')}</p>
-                </label>
+                <input id="coffee" type="checkbox" checked={formData.addSupport} onChange={(e) => setFormData({ ...formData, addSupport: e.target.checked })} className="mt-1" />
+                <label htmlFor="coffee" className="text-sm cursor-pointer font-bold text-orange-700 flex items-center gap-1"><Coffee className="w-4 h-4" /> {t('contribution.addSupport')}</label>
               </div>
             </div>
           </div>
 
+          {/* Messaggio */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <MessageSquare className="w-4 h-4" /> {t('contribution.message')}
-            </label>
-            <textarea
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              rows={2}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none resize-none"
-            />
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><MessageSquare className="w-4 h-4" /> {t('contribution.message')}</label>
+            <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={2} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none resize-none" />
           </div>
 
+          {/* Metodo di Pagamento */}
           <div className="space-y-2">
             <label className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition ${formData.paymentMethod === 'digital' ? 'border-orange-500 bg-orange-50' : 'border-gray-100'}`}>
               <input type="radio" className="hidden" checked={formData.paymentMethod === 'digital'} onChange={() => setFormData({...formData, paymentMethod: 'digital'})} />
@@ -191,48 +141,30 @@ export default function ContributionForm({ eventId, currency, budgetGoal, paypal
             </label>
           </div>
 
-          {/* PULSANTI DI PAGAMENTO DIGITALI */}
-          {formData.paymentMethod === 'digital' && formData.amount && parseFloat(formData.amount) > 0 && (
-            <div className="grid grid-cols-1 gap-2">
+          {/* Tasti Digitali (PayPal e Satispay) */}
+          {formData.paymentMethod === 'digital' && (
+            <div className="space-y-2">
               {paypalEmail && (
-                <a
-                  href={createPayPalLink(paypalEmail, getTotalAmount(), currency)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full bg-[#0070ba] text-white py-3 rounded-xl font-bold text-center hover:opacity-90 transition"
-                >
-                  Paga con PayPal ({formatCurrency(getTotalAmount(), currency)})
+                <a href={createPayPalLink(paypalEmail, getTotalAmount(), currency)} target="_blank" rel="noopener noreferrer" className="block w-full bg-[#0070ba] text-white py-3 rounded-xl font-bold text-center">
+                  PayPal ({formatCurrency(getTotalAmount(), currency)})
                 </a>
               )}
               {satispayId && (
-                <button
-                  type="button"
-                  onClick={() => setShowSatispayPopup(true)}
-                  className="w-full bg-[#fa3e5a] text-white py-3 rounded-xl font-bold text-center hover:opacity-90 transition flex items-center justify-center gap-2"
-                >
-                  Paga con Satispay
+                <button type="button" onClick={() => setShowSatispayPopup(true)} className="w-full bg-[#fa3e5a] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">
+                  Satispay ({formatCurrency(getTotalAmount(), currency)})
                 </button>
               )}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading || !formData.amount}
-            className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-4 rounded-xl font-bold shadow-lg disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading || !formData.amount} className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-4 rounded-xl font-bold shadow-lg disabled:opacity-50">
             {loading ? t('contribution.processing') : t('contribution.submit')}
           </button>
         </form>
       </div>
 
       {showSatispayPopup && satispayId && (
-        <SatispayPopup
-          satispayId={satispayId}
-          amount={getTotalAmount().toString()}
-          currency={currency}
-          onClose={() => setShowSatispayPopup(false)}
-        />
+        <SatispayPopup satispayId={satispayId} amount={getTotalAmount().toString()} currency={currency} onClose={() => setShowSatispayPopup(false)} />
       )}
     </div>
   );
