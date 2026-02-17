@@ -52,6 +52,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Protezione contro i doppi click
     if (loading) return;
 
     setError('');
@@ -71,6 +72,8 @@ export default function ContributionForm({ eventId, currency, contributionType, 
       const supportAmount = formData.addSupport ? 1 : 0;
       const totalAmount = roundCurrency(baseAmount + supportAmount);
 
+      // Eseguiamo SOLO l'inserimento. 
+      // Il database aggiornerà il totale automaticamente tramite Trigger.
       const { error: insertError } = await supabase
         .from('contributions')
         .insert({
@@ -88,16 +91,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
 
       if (insertError) throw insertError;
 
-      if (formData.paymentMethod !== 'cash') {
-        const { error: rpcError } = await supabase
-          .rpc('increment_event_amount', {
-            event_id: eventId,
-            amount: baseAmount
-          });
-
-        if (rpcError) throw rpcError;
-      }
-
+      // Effetto successo
       confetti({
         particleCount: 200,
         spread: 100,
@@ -105,9 +99,11 @@ export default function ContributionForm({ eventId, currency, contributionType, 
         colors: ['#f97316', '#ec4899', '#eab308'],
       });
 
+      // Piccolo delay per far vedere i coriandoli prima di chiudere
       setTimeout(() => {
         onSuccess();
       }, 1000);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add contribution');
       setLoading(false);
@@ -121,10 +117,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
           <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
             {t('contribution.title')}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -142,7 +135,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
               onChange={(e) => setFormData({ ...formData, contributorName: e.target.value })}
               required={!formData.isAnonymous}
               disabled={formData.isAnonymous}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition disabled:bg-gray-100 disabled:text-gray-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition disabled:bg-gray-100"
               placeholder="John Doe"
             />
             <div className="mt-2 flex items-center gap-2">
@@ -151,10 +144,10 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                 type="checkbox"
                 checked={formData.isAnonymous}
                 onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })}
-                className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                className="w-4 h-4 text-orange-500 border-gray-300 rounded"
               />
               <label htmlFor="isAnonymous" className="text-sm text-gray-700 cursor-pointer">
-                {t('contribution.anonymous')} <span className="text-gray-500">({t('contribution.anonymousHelp')})</span>
+                {t('contribution.anonymous')}
               </label>
             </div>
           </div>
@@ -173,10 +166,10 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 required
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
-                placeholder="0.00"
+                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition"
               />
             </div>
+            
             <div className="mt-3 bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-3 border border-orange-200">
               <div className="flex items-start gap-2">
                 <input
@@ -184,23 +177,18 @@ export default function ContributionForm({ eventId, currency, contributionType, 
                   type="checkbox"
                   checked={formData.addSupport}
                   onChange={(e) => setFormData({ ...formData, addSupport: e.target.checked })}
-                  className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 mt-0.5"
+                  className="w-4 h-4 text-orange-500 mt-0.5"
                 />
                 <label htmlFor="addSupport" className="text-sm cursor-pointer flex-1">
                   <div className="flex items-center gap-1 font-medium text-gray-900 mb-1">
                     <Coffee className="w-4 h-4 text-orange-500" />
                     <span>{t('contribution.addSupport')}</span>
                   </div>
-                  <div className="text-xs text-gray-600 leading-relaxed">
+                  <div className="text-xs text-gray-600">
                     {t('contribution.addSupportDesc')}
                   </div>
                 </label>
               </div>
-              {formData.addSupport && (
-                <div className="mt-2 text-center text-sm font-semibold text-orange-600">
-                  {t('contribution.totalAmount')}: {formatCurrency(getTotalAmount(), currency)}
-                </div>
-              )}
             </div>
           </div>
 
@@ -214,149 +202,56 @@ export default function ContributionForm({ eventId, currency, contributionType, 
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none"
-              placeholder={t('contribution.messagePlaceholder')}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition resize-none"
             />
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
+          {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>}
 
           <div className="space-y-3">
-            <div className="text-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
-                {t('contribution.paymentMethod')}
-              </h3>
-              <p className="text-sm text-gray-600">
-                {t('contribution.paymentMethodDesc')}
-              </p>
-            </div>
-
+            <h3 className="text-lg font-bold text-center">{t('contribution.paymentMethod')}</h3>
             <div className="space-y-2">
-              <label className="flex items-start gap-3 p-4 border-2 border-blue-200 bg-blue-50 rounded-lg cursor-pointer hover:border-blue-400 transition">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="digital"
-                  checked={formData.paymentMethod === 'digital'}
-                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as 'digital' | 'cash' })}
-                  className="w-5 h-5 text-blue-500 mt-0.5"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 font-medium text-gray-900 mb-1">
-                    <CreditCard className="w-4 h-4 text-blue-600" />
-                    <span>{t('contribution.digitalPayment')}</span>
-                    <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">{t('contribution.recommended')}</span>
-                  </div>
-                  <p className="text-sm text-gray-600">{t('contribution.digitalPaymentDesc')}</p>
+              <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${formData.paymentMethod === 'digital' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                <input type="radio" name="paymentMethod" value="digital" checked={formData.paymentMethod === 'digital'} onChange={(e) => setFormData({ ...formData, paymentMethod: 'digital' })} className="hidden" />
+                <CreditCard className="w-5 h-5 text-blue-600 mt-1" />
+                <div>
+                  <div className="font-medium">{t('contribution.digitalPayment')}</div>
+                  <p className="text-xs text-gray-500">{t('contribution.digitalPaymentDesc')}</p>
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-gray-400 transition">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="cash"
-                  checked={formData.paymentMethod === 'cash'}
-                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as 'digital' | 'cash' })}
-                  className="w-5 h-5 text-gray-500 mt-0.5"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 font-medium text-gray-900 mb-1">
-                    <Wallet className="w-4 h-4 text-gray-600" />
-                    <span>{t('contribution.cashPayment')}</span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    {t('contribution.cashPaymentDesc').replace('{organizer}', organizerName || (t('contribution.anonymousHelp').includes('amico') ? 'l\'organizzatore' : 'the organizer'))}
-                  </p>
+              <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition ${formData.paymentMethod === 'cash' ? 'border-gray-500 bg-gray-50' : 'border-gray-200'}`}>
+                <input type="radio" name="paymentMethod" value="cash" checked={formData.paymentMethod === 'cash'} onChange={(e) => setFormData({ ...formData, paymentMethod: 'cash' })} className="hidden" />
+                <Wallet className="w-5 h-5 text-gray-600 mt-1" />
+                <div>
+                  <div className="font-medium">{t('contribution.cashPayment')}</div>
+                  <p className="text-xs text-gray-500">{t('contribution.cashPaymentDesc').replace('{organizer}', organizerName || 'organizzatore')}</p>
                 </div>
               </label>
             </div>
-
-            {formData.paymentMethod === 'cash' && eventDate && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-sm text-amber-800 mb-3">
-                  {t('contribution.cashPromiseNote').replace('{organizer}', organizerName || (t('contribution.anonymousHelp').includes('amico') ? 'l\'organizzatore' : 'the organizer'))}
-                </p>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const hasPermission = await requestNotificationPermission();
-                    if (hasPermission) {
-                      const eventDateTime = new Date(eventDate);
-                      const reminderDate = new Date(eventDateTime.getTime() - 24 * 60 * 60 * 1000);
-                      scheduleReminder(
-                        'Promemoria PartyPool',
-                        `Ricorda di portare ${formatCurrency(getTotalAmount(), currency)} in contanti per il regalo`,
-                        reminderDate
-                      );
-                      setReminderSet(true);
-                    } else {
-                      alert(t('contribution.notificationPermissionRequired'));
-                    }
-                  }}
-                  className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-lg transition font-medium"
-                  disabled={reminderSet}
-                >
-                  {reminderSet ? (
-                    <>
-                      <CalendarIcon className="w-4 h-4" />
-                      {t('contribution.reminderSet')}
-                    </>
-                  ) : (
-                    <>
-                      <Bell className="w-4 h-4" />
-                      {t('contribution.setReminder')}
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
           </div>
 
+          {/* PayPal/Satispay Links */}
           {formData.paymentMethod === 'digital' && (paypalEmail || satispayId) && formData.amount && parseFloat(formData.amount) > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-3 mt-4">
               {paypalEmail && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800 mb-3">
-                    {t('event.payWithPayPal')}
-                  </p>
-                  <a
-                    href={createPayPalLink(paypalEmail, getTotalAmount(), currency, organizerName ? `Regalo per ${organizerName}` : undefined)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full bg-[#0070ba] text-white py-3 rounded-lg font-semibold hover:bg-[#005ea6] transition text-center"
-                  >
-                    PayPal - {formatCurrency(getTotalAmount(), currency)}
-                  </a>
-                </div>
-              )}
-
-              {satispayId && (
-                <div className="bg-[#FC5F3A]/10 border border-[#FC5F3A] rounded-lg p-4">
-                  <p className="text-sm text-[#FC5F3A] mb-3">
-                    {t('event.payWithSatispay')}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowSatispayPopup(true)}
-                    className="block w-full bg-[#FC5F3A] text-white py-3 rounded-lg font-semibold hover:bg-[#E54E2A] transition text-center"
-                  >
-                    Satispay - {formatCurrency(getTotalAmount(), currency)}
-                  </button>
-                </div>
+                <a
+                  href={createPayPalLink(paypalEmail, getTotalAmount(), currency)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-[#0070ba] text-white py-3 rounded-lg font-semibold text-center"
+                >
+                  Paga con PayPal - {formatCurrency(getTotalAmount(), currency)}
+                </a>
               )}
             </div>
           )}
 
-          <div className="pt-2 pb-1">
+          <div className="pt-2">
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || !formData.amount}
+              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-3 rounded-lg font-semibold disabled:opacity-50 transition"
             >
               {loading ? t('contribution.processing') : t('contribution.submit')}
             </button>
@@ -364,7 +259,7 @@ export default function ContributionForm({ eventId, currency, contributionType, 
         </form>
       </div>
 
-      {showSatispayPopup && satispayId && formData.amount && (
+      {showSatispayPopup && satispayId && (
         <SatispayPopup
           satispayId={satispayId}
           amount={getTotalAmount().toString()}
