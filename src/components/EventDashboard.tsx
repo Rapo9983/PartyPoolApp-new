@@ -68,7 +68,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     loadEventData();
   }, [slug]);
 
-  // Sincronizzazione Realtime
   useEffect(() => {
     if (!event?.id) return;
 
@@ -102,7 +101,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     };
   }, [event?.id]);
 
-  // Barra di avanzamento fluida con fix arrotondamento
   useEffect(() => {
     if (event) {
       const goal = Math.round((Number(event.budget_goal) || 0) * 100) / 100;
@@ -112,7 +110,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     }
   }, [event?.current_amount, event?.budget_goal]);
 
-  // Calcolo Totale Caffè
+  // Calcolo Totale Caffè (support_amount)
   const totalCoffee = contributions.reduce((sum, c) => sum + (Number(c.support_amount) || 0), 0);
 
   const handleContributionAdded = () => {
@@ -151,11 +149,9 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   if (loading) return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
   if (!event) return <div className="min-h-screen flex items-center justify-center p-4">Event not found</div>;
 
-  // FIX ARROTONDAMENTO PER VISUALIZZAZIONE
   const currentAmount = Math.round((Number(event.current_amount) || 0) * 100) / 100;
   const budgetGoal = Math.round((Number(event.budget_goal) || 0) * 100) / 100;
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
-  const celebrantImage = event.celebrant_image;
 
   return (
     <>
@@ -179,8 +175,8 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
             <div className="bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 p-8 text-white">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-6">
                 <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-                  {celebrantImage ? (
-                    <img src={celebrantImage} className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover" />
+                  {event.celebrant_image ? (
+                    <img src={event.celebrant_image} className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover" />
                   ) : (
                     <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-white flex items-center justify-center"><Gift className="w-12 h-12 text-white" /></div>
                   )}
@@ -268,7 +264,19 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
           </div>
         </div>
 
-        {showContributeForm && <ContributionForm eventId={event.id} currency={event.currency} budgetGoal={event.budget_goal} paypalEmail={event.paypal_email} onClose={() => setShowContributeForm(false)} onSuccess={handleContributionAdded} />}
+        {/* MODULO DONAZIONE CON FIX SATISPAY_ID */}
+        {showContributeForm && (
+          <ContributionForm 
+            eventId={event.id} 
+            currency={event.currency} 
+            budgetGoal={event.budget_goal} 
+            paypalEmail={event.paypal_email} 
+            satispayId={event.satispay_id} 
+            onClose={() => setShowContributeForm(false)} 
+            onSuccess={handleContributionAdded} 
+          />
+        )}
+
         {showWishForm && <WishForm eventId={event.id} onClose={() => setShowWishForm(false)} onSuccess={handleWishAdded} />}
         {showQRCode && <QRCodeModal url={window.location.href} eventName={event.celebrant_name} onClose={() => setShowQRCode(false)} />}
         <Footer />
