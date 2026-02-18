@@ -123,17 +123,19 @@ export default function EventDashboard() {
 
           <div className="h-px bg-gray-100 w-full" />
 
-          {/* BOX REGALO - SOLO AGGIUNTE MIRATE */}
+          {/* BOX REGALO */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 justify-center">
               <Gift className="w-6 h-6 text-orange-500" />
-              <h2 className="text-xl font-black uppercase tracking-tighter text-gray-800">Cosa vogliamo regalare</h2>
+              <h2 className="text-xl font-black uppercase tracking-tighter text-gray-800">
+                {t('event.gift')}
+              </h2>
             </div>
 
             <div className="bg-gradient-to-br from-orange-400 to-pink-500 rounded-[3rem] p-1 shadow-2xl">
               <div className="bg-white rounded-[2.6rem] p-8">
                 
-                {/* 1. AGGIUNTA: DESCRIZIONE REGALO */}
+                {/* DESCRIZIONE REGALO */}
                 {event.gift_description && (
                   <div className="bg-orange-50/50 rounded-3xl p-6 mb-8 border border-orange-100 text-center">
                     <p className="text-2xl font-black text-gray-800 leading-tight">
@@ -157,10 +159,10 @@ export default function EventDashboard() {
                   )}
                 </div>
 
-                {/* 2. MODIFICA: ETICHETTA LINK */}
+                {/* LINK AL REGALO CON TRADUZIONE */}
                 {event.gift_url && (
                   <a href={event.gift_url} target="_blank" rel="noopener noreferrer" className="mt-8 flex items-center justify-center gap-2 w-full py-4 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-all text-sm uppercase tracking-widest">
-                    <ExternalLink className="w-4 h-4" /> Vedi il regalo online
+                    <ExternalLink className="w-4 h-4" /> {t('event.view.product')}
                   </a>
                 )}
               </div>
