@@ -464,7 +464,7 @@ export default function EditEvent({ eventId, onEventUpdated, onBack }: EditEvent
                 onChange={(e) => setFormData({ ...formData, giftDescription: e.target.value })}
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none"
-                placeholder="Descrivi il regalo che desideri ricevere..."
+                placeholder="Descrivi il regalo..."
               />
             </div>
 
