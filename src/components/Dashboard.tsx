@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Event } from '../lib/supabaseClient';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Calendar, LogOut, Gift, ExternalLink, Trash2, Edit } from 'lucide-react';
+import { Plus, Calendar, Gift, ExternalLink, Trash2, Edit } from 'lucide-react';
 import Footer from './Footer';
 import GoalReachedModal from './GoalReachedModal';
 import InstallPWABanner from './InstallPWABanner';
@@ -23,13 +23,10 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
   const [showGoalReachedModal, setShowGoalReachedModal] = useState(false);
   const [goalReachedEvent, setGoalReachedEvent] = useState<Event | null>(null);
 
-  // Caricamento iniziale e sottoscrizione Realtime
   useEffect(() => {
     if (!user) return;
-
     loadEvents();
 
-    // Sottoscrizione ai cambiamenti in tempo reale della tabella 'events'
     const channel = supabase
       .channel('dashboard-changes')
       .on(
@@ -70,7 +67,6 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
 
   const loadEvents = async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('events')
@@ -95,7 +91,6 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
 
   const checkForGoalReached = () => {
     const seenGoals = JSON.parse(localStorage.getItem('goalReachedSeen') || '{}');
-
     const reachedEvent = events.find(event => {
       const currentAmount = Number(event.current_amount) || 0;
       const budgetGoal = Number(event.budget_goal) || 0;
@@ -116,80 +111,42 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
       seenGoals[goalReachedEvent.id] = true;
       localStorage.setItem('goalReachedSeen', JSON.stringify(seenGoals));
     }
-
     setShowGoalReachedModal(false);
     setGoalReachedEvent(null);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   const handleDeleteEvent = async (eventId: string, eventName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-
-    if (!window.confirm(t('dashboard.confirmDelete'))) {
-      return;
-    }
-
+    if (!window.confirm(t('dashboard.confirmDelete'))) return;
     setDeletingId(eventId);
     try {
       const { error } = await supabase
         .from('events')
         .delete()
         .eq('id', eventId);
-
       if (error) throw error;
-
       setEvents(events.filter(event => event.id !== eventId));
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert('Failed to delete event. Please try again.');
+      alert('Failed to delete event.');
     } finally {
       setDeletingId(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-orange-400 to-pink-500 p-2 rounded-lg">
-                <Gift className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-                {t('app.name')}
-              </h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.email}</span>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
-              >
-                <LogOut className="w-5 h-5" />
-                {t('dashboard.signOut')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 pt-20">
+      {/* LA NAV DOPPIA E' STATA RIMOSSA DA QUI */}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">{t('dashboard.title')}</h2>
             <p className="text-gray-600 mt-1">{t('dashboard.subtitle')}</p>
           </div>
           <button
             onClick={onCreateEvent}
-            className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-600 transition flex items-center gap-2"
+            className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-600 transition flex items-center justify-center gap-2 shadow-lg"
           >
             <Plus className="w-5 h-5" />
             {t('dashboard.createEvent')}
@@ -239,15 +196,13 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
                           onEditEvent(event.id);
                         }}
                         className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition"
-                        title={t('dashboard.editEvent')}
                       >
                         <Edit className="w-5 h-5" />
                       </button>
                       <button
                         onClick={(e) => handleDeleteEvent(event.id, event.celebrant_name, e)}
                         disabled={deletingId === event.id}
-                        className="bg-white/20 hover:bg-red-500 text-white p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={t('dashboard.deleteEvent')}
+                        className="bg-white/20 hover:bg-red-500 text-white p-2 rounded-lg transition disabled:opacity-50"
                       >
                         {deletingId === event.id ? (
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -264,21 +219,18 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
                 </div>
                 <div className="p-6">
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
-                  
-                  {/* Barra di progresso visuale */}
                   <div className="w-full bg-gray-100 rounded-full h-2.5 mb-4">
                     <div 
                       className="bg-gradient-to-r from-orange-500 to-pink-500 h-2.5 rounded-full transition-all duration-500" 
                       style={{ width: `${Math.min((event.current_amount / event.budget_goal) * 100, 100)}%` }}
                     ></div>
                   </div>
-
                   <div className="flex items-center justify-between">
                     <div className="text-orange-600 font-semibold">
                       {t('dashboard.goal')}: {formatCurrency(Number(event.budget_goal), event.currency)}
                     </div>
                     <div className="text-xs text-gray-400 flex items-center gap-1">
-                      {formatCurrency(event.current_amount, event.currency)} raccolti
+                      {formatCurrency(event.current_amount, event.currency)} {t('piggybank.collected')}
                       <ExternalLink className="w-4 h-4" />
                     </div>
                   </div>
