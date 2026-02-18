@@ -212,10 +212,10 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const budgetGoal = Number(event.budget_goal) || 0;
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
   
-  // Calcolo caffè e totale reale per il creatore
   const totalCaffé = contributions.reduce((acc, c) => acc + (Number(c.support_amount) || 0), 0);
   const realTotal = contributions.reduce((acc, c) => acc + (Number(c.base_amount) || 0) + (Number(c.support_amount) || 0), 0);
 
+  const giftImage = event.gift_url ? extractImageFromUrl(event.gift_url) : null;
   const celebrantImage = event.celebrant_image;
   const ogTitle = language === 'it' ? `Partecipa al regalo per ${event.celebrant_name}!` : `Join us celebrating ${event.celebrant_name}!`;
   const ogDescription = language === 'it' ? 'Contribuisci anche tu su PartyPool!' : 'Contribute on PartyPool!';
@@ -227,7 +227,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
         <meta name="description" content={ogDescription} />
         <meta property="og:title" content={ogTitle} />
         <meta property="og:description" content={ogDescription} />
-        <meta property="og:image" content={celebrantImage || 'https://images.pexels.com/photos/1729797/pexels-photo-1729797.jpeg?auto=compress&cs=tinysrgb&w=1200'} />
+        <meta property="og:image" content={celebrantImage || giftImage || 'https://images.pexels.com/photos/1729797/pexels-photo-1729797.jpeg?auto=compress&cs=tinysrgb&w=1200'} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="website" />
       </Helmet>
@@ -298,6 +298,32 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               </div>
 
               <p className="text-white/90 mb-6">{event.description}</p>
+
+              {/* SEZIONE REGALO RIPRISTINATA */}
+              {event.gift_url && (
+                <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                  <div className="flex items-center gap-4">
+                    {giftImage && (
+                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-white flex-shrink-0">
+                        <img src={giftImage} alt="Gift" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="font-bold flex items-center gap-2">
+                        <ShoppingBag size={18} /> {t('event.gift')}
+                      </h3>
+                      <a 
+                        href={isAmazonLink(event.gift_url) ? addAmazonAffiliateTag(event.gift_url) : event.gift_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm underline flex items-center gap-1 mt-1 opacity-90 hover:opacity-100"
+                      >
+                        {t('event.viewProduct')} <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
