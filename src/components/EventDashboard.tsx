@@ -20,7 +20,7 @@ interface EventDashboardProps {
 export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardProps) {
   const { user } = useAuth();
   const { t, language } = useLanguage();
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<any | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,42 +41,19 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
     const channel = supabase
       .channel(`event-live-${event.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'events',
-          filter: `id=eq.${event.id}`,
-        },
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'events', filter: `id=eq.${event.id}` },
         (payload) => {
           if (payload.new) {
-            const updated = payload.new as Event;
-            setEvent((prev) => prev ? {
-              ...prev,
-              current_amount: Number(updated.current_amount),
-              budget_goal: Number(updated.budget_goal),
-            } : null);
+            setEvent((prev: any) => ({ ...prev, ...payload.new }));
           }
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contributions',
-          filter: `event_id=eq.${event.id}`,
-        },
-        () => {
-          loadContributionsAndWishes(event.id);
-        }
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions', filter: `event_id=eq.${event.id}` },
+        () => loadContributionsAndWishes(event.id)
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [event?.id]);
 
   useEffect(() => {
@@ -92,259 +69,174 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const loadEventData = async () => {
     setLoading(true);
     try {
-      const { data: eventData, error: eventError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('slug', slug)
-        .maybeSingle();
-
-      if (eventError) throw eventError;
-      if (!eventData) {
-        setLoading(false);
-        return;
-      }
-
-      setEvent({
-        ...eventData,
-        budget_goal: Number(eventData.budget_goal),
-        current_amount: Number(eventData.current_amount),
-      });
-
-      await loadContributionsAndWishes(eventData.id);
+      const { data, error } = await supabase.from('events').select('*').eq('slug', slug).maybeSingle();
+      if (error) throw error;
+      if (data) setEvent(data);
     } catch (error) {
-      console.error('Error loading event:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const loadContributionsAndWishes = async (eventId: string) => {
-    const [contributionsRes, wishesRes] = await Promise.all([
+    const [cRes, wRes] = await Promise.all([
       supabase.from('contributions').select('*').eq('event_id', eventId).order('created_at', { ascending: false }),
       supabase.from('wishes').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
     ]);
-
-    if (contributionsRes.data) setContributions(contributionsRes.data);
-    if (wishesRes.data) setWishes(wishesRes.data);
+    if (cRes.data) setContributions(cRes.data);
+    if (wRes.data) setWishes(wRes.data);
   };
-
-  const handleContributionAdded = () => setShowContributeForm(false);
-  const handleWishAdded = () => setShowWishForm(false);
 
   const handleShare = async () => {
     const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({ title: `Party for ${event?.celebrant_name}`, url });
-    } else {
-      await navigator.clipboard.writeText(url);
-      alert('Link copiato!');
-    }
+    if (navigator.share) { await navigator.share({ title: `Party for ${event?.celebrant_name}`, url }); }
+    else { await navigator.clipboard.writeText(url); alert('Link copiato!'); }
   };
 
-  const handleAddToCalendar = () => {
-    if (!event) return;
-    const eventUrl = window.location.href;
-    const title = `Festa di ${event.celebrant_name}`;
-    const description = `${event.description}\n\nPartecipa: ${eventUrl}`;
-    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-      window.open(createGoogleCalendarUrl(title, event.event_date, description, eventUrl), '_blank');
-    } else {
-      downloadCalendarFile(`festa.ics`, generateCalendarEvent(title, event.event_date, description, eventUrl));
-    }
-  };
-
-  const handleConfirmCashPayment = async (id: string) => {
-    await supabase.from('contributions').update({ payment_status: 'confirmed' }).eq('id', id);
-  };
-
-  const handleWhatsAppShare = () => {
-    if (!event) return;
-    const message = t('event.whatsappMessage').replace('{name}', event.celebrant_name).replace('{url}', window.location.href);
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  const handleDeleteEvent = async () => {
-    if (!event || !user || !window.confirm(t('dashboard.confirmDelete'))) return;
-    setDeleting(true);
-    await supabase.from('events').delete().eq('id', event.id);
-    if (onBack) onBack();
-  };
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">{t('common.loading')}</div>;
-  if (!event) return <div className="min-h-screen flex items-center justify-center p-4">Event not found</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Caricamento...</div>;
+  if (!event) return <div className="min-h-screen flex items-center justify-center">Evento non trovato</div>;
 
   const currentAmount = Number(event.current_amount) || 0;
   const budgetGoal = Number(event.budget_goal) || 0;
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
-  
   const totalCaffé = contributions.reduce((acc, c) => acc + (Number(c.support_amount) || 0), 0);
   const realTotal = contributions.reduce((acc, c) => acc + (Number(c.base_amount) || 0) + (Number(c.support_amount) || 0), 0);
 
-  const celebrantImage = event.celebrant_image;
-
-  // Fallback testi traduzioni
-  const labelGift = t('event.gift') !== 'event.gift' ? t('event.gift') : (language === 'it' ? 'Il Regalo' : 'The Gift');
-  const labelViewProduct = t('event.viewProduct') !== 'event.viewProduct' ? t('event.viewProduct') : (language === 'it' ? 'Vedi prodotto' : 'View product');
-
   return (
     <>
-      <Helmet>
-        <title>{event.celebrant_name} - PartyPool</title>
-        <meta property="og:image" content={celebrantImage || ''} />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 p-4">
+      <Helmet><title>{event.celebrant_name} - PartyPool</title></Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 p-4 font-sans">
         <div className="max-w-4xl mx-auto pt-8 pb-12">
+          
           <div className="mb-6 flex justify-between items-center">
-            {onBack && (
-              <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition">
-                <ArrowLeft className="w-5 h-5" /> {t('event.backButton')}
-              </button>
-            )}
+            <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition">
+              <ArrowLeft className="w-5 h-5" /> Torna indietro
+            </button>
             {isCreator && (
-              <div className="flex gap-2">
-                {onEdit && (
-                  <button onClick={() => onEdit(event.id)} className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg transition"><Edit className="w-5 h-5" /> {t('dashboard.editEvent')}</button>
-                )}
-                <button onClick={handleDeleteEvent} disabled={deleting} className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2"><Trash2 className="w-5 h-5" /> {t('event.deleteEvent')}</button>
-              </div>
+              <button onClick={() => onEdit?.(event.id)} className="bg-orange-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition shadow-sm">
+                <Edit className="w-4 h-4" /> Modifica Evento
+              </button>
             )}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-gradient-to-r from-orange-400 via-pink-400 to-yellow-400 p-8 text-white">
-              <div className="flex justify-between items-start mb-6 flex-wrap">
-                <div className="flex items-start gap-4 md:gap-6 w-full md:w-auto">
-                  <div className="relative flex-shrink-0">
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
-                      {celebrantImage ? <img src={celebrantImage} alt={event.celebrant_name} className="w-full h-full object-cover" /> : <Gift className="w-10 h-10" />}
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white">
+            <div className="bg-gradient-to-br from-orange-400 via-pink-400 to-yellow-400 p-8 text-white">
+              
+              <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
+                <div className="flex items-center gap-6">
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white/20 backdrop-blur-md border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center">
+                    {event.celebrant_image ? <img src={event.celebrant_image} className="w-full h-full object-cover" /> : <Gift className="w-12 h-12" />}
+                  </div>
+                  <div>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tight">{event.celebrant_name}</h1>
+                    <div className="flex items-center gap-3 mt-2 opacity-90 text-sm md:text-base">
+                      <Calendar size={18}/> {new Date(event.event_date).toLocaleDateString()}
+                      {event.location && <><span className="opacity-50">|</span> <MapPin size={18}/> {event.location}</>}
                     </div>
                   </div>
-                  <div className="pt-2 flex-1 min-w-0">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 break-words">{event.celebrant_name}</h1>
-                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={handleAddToCalendar} className="bg-white/20 p-3 rounded-full hover:bg-white/30 transition"><CalendarPlus className="w-5 h-5" /></button>
-                  <button onClick={() => setShowQRCode(true)} className="bg-white/20 p-3 rounded-full hover:bg-white/30 transition"><QrCode className="w-5 h-5" /></button>
-                  <button onClick={handleShare} className="bg-white/20 p-3 rounded-full hover:bg-white/30 transition"><Share2 className="w-5 h-5" /></button>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowQRCode(true)} className="bg-white/20 p-3 rounded-2xl hover:bg-white/30 transition backdrop-blur-sm"><QrCode size={22}/></button>
+                  <button onClick={handleShare} className="bg-white/20 p-3 rounded-2xl hover:bg-white/30 transition backdrop-blur-sm"><Share2 size={22}/></button>
                 </div>
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-white/90">
-                  <Calendar className="w-5 h-5" />
-                  <span>{new Date(event.event_date).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                </div>
-                {event.location && (
-                  <div className="flex items-center gap-2 text-white/90">
-                    <MapPin className="w-5 h-5" /> <span>{event.location}</span>
-                  </div>
-                )}
-              </div>
+              <p className="mb-8 text-lg md:text-xl font-medium leading-relaxed bg-black/5 p-4 rounded-2xl">{event.description}</p>
 
-              <p className="text-white/90 mb-6">{event.description}</p>
-
-              {/* SEZIONE REGALO - SOLO TESTO E LINK */}
+              {/* SEZIONE REGALO: MOSTRA DESCRIZIONE E LINK */}
               {(event.gift_url || event.gift_description) && (
-                <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                  <h3 className="font-bold flex items-center gap-2 text-white mb-2 text-lg">
-                    <ShoppingBag size={20} /> {labelGift}
-                  </h3>
+                <div className="mb-8 bg-white/20 backdrop-blur-md rounded-2xl p-6 border border-white/30 shadow-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <ShoppingBag className="text-white" size={24} />
+                    <h3 className="font-bold text-xl uppercase tracking-wider text-white">
+                      {language === 'it' ? 'Il Regalo' : 'The Gift'}
+                    </h3>
+                  </div>
                   
                   {event.gift_description && (
-                    <p className="text-white/90 text-sm mb-3 italic leading-relaxed">
-                      "{event.gift_description}"
+                    <p className="text-white font-semibold text-lg mb-4 leading-snug">
+                      {event.gift_description}
                     </p>
                   )}
 
                   {event.gift_url && (
                     <a 
                       href={isAmazonLink(event.gift_url) ? addAmazonAffiliateTag(event.gift_url) : event.gift_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition-all border border-white/10"
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-white text-orange-600 px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-md"
                     >
-                      {labelViewProduct} <ExternalLink size={14} />
+                      {language === 'it' ? 'Apri link regalo' : 'Open gift link'} <ExternalLink size={18} />
                     </a>
                   )}
                 </div>
               )}
 
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">{t('event.progress')}</span>
-                  <span className="text-lg font-bold">{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
+              <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-5 border border-white/10">
+                <div className="flex justify-between items-center mb-3 font-bold text-sm tracking-widest uppercase">
+                  <span>Obiettivo Regalo</span>
+                  <span>{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
                 </div>
-                <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden">
-                  <div className="bg-white h-full transition-all duration-1000 ease-out" style={{ width: `${progressWidth}%` }} />
+                <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden shadow-inner border border-white/10">
+                  <div className="bg-white h-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.8)]" style={{ width: `${progressWidth}%` }} />
                 </div>
-                <div className="flex justify-between items-center mt-1">
-                  <div className="text-sm text-white/80">{progressPercentage.toFixed(1)}% {t('event.reached')}</div>
+                <div className="flex justify-between items-center mt-4">
+                  <div className="bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">{progressPercentage.toFixed(0)}% Raggiunto</div>
                   {totalCaffé > 0 && (
-                    <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-                      <Coffee size={14} /> <span>{totalCaffé} {totalCaffé === 1 ? 'Caffè' : 'Caffè'}</span>
+                    <div className="flex items-center gap-2 bg-white text-orange-600 px-4 py-1.5 rounded-full text-sm font-black animate-bounce shadow-lg">
+                      <Coffee size={16} /> {totalCaffé} {totalCaffé === 1 ? 'Caffè offerto' : 'Caffè offerti'}
                     </div>
                   )}
                 </div>
               </div>
-              
+
               {isCreator && (
-                <div className="mt-4 p-3 bg-black/10 rounded-lg flex items-center justify-between border border-white/10">
-                  <div className="flex items-center gap-2 text-sm font-medium"><Wallet size={16} /> Incasso Totale:</div>
-                  <div className="font-bold">{formatCurrency(realTotal, event.currency)}</div>
+                <div className="mt-6 p-4 bg-black/20 rounded-2xl flex items-center justify-between border border-white/10">
+                  <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-tight"><Wallet size={20}/> Incasso Reale (Regali + Caffè):</span>
+                  <span className="font-black text-2xl">{formatCurrency(realTotal, event.currency)}</span>
                 </div>
               )}
             </div>
 
             <div className="p-8">
-              <div className="grid md:grid-cols-2 gap-4 mb-4">
-                <button onClick={() => setShowContributeForm(true)} className="bg-gradient-to-r from-orange-500 to-pink-500 text-white py-4 rounded-xl font-semibold hover:opacity-90 transition shadow-md">{t('event.contribute')}</button>
-                <button onClick={() => setShowWishForm(true)} className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-4 rounded-xl font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 shadow-md"><MessageSquare className="w-5 h-5" /> {t('event.leaveWish')}</button>
+              <div className="grid md:grid-cols-2 gap-4 mb-10">
+                <button onClick={() => setShowContributeForm(true)} className="bg-orange-500 text-white py-5 rounded-2xl font-black hover:bg-orange-600 transition shadow-xl text-xl tracking-tight uppercase">Partecipa al Regalo</button>
+                <button onClick={() => setShowWishForm(true)} className="bg-pink-500 text-white py-5 rounded-2xl font-black hover:bg-pink-600 transition flex items-center justify-center gap-3 shadow-xl text-xl tracking-tight uppercase"><MessageSquare size={24}/> Fai gli Auguri</button>
               </div>
 
-              <button onClick={handleWhatsAppShare} className="w-full bg-[#25D366] text-white py-4 rounded-xl font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 mb-8 shadow-sm">
-                <MessageCircle className="w-5 h-5" /> {t('event.shareWhatsApp')}
-              </button>
-
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-12">
                 <div>
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-gray-800 mb-4"><Users className="w-6 h-6 text-orange-500" /> {t('event.contributions')} ({contributions.length})</h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    {contributions.length === 0 ? <p className="text-gray-500 text-sm">{t('event.noContributions')}</p> : (
-                      contributions.map((c) => (
-                        <div key={c.id} className={`rounded-lg p-4 ${c.payment_status === 'promised' ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50'}`}>
-                          <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-800">{c.contributor_name}</span>
-                              {Number(c.support_amount) > 0 && <div className="bg-orange-100 p-1 rounded-full"><Coffee size={12} className="text-orange-500" /></div>}
-                            </div>
-                            <span className="text-orange-600 font-bold">{formatCurrency(Number(c.base_amount), event.currency)}</span>
+                  <h3 className="flex items-center gap-3 font-black text-gray-800 mb-6 text-xl border-b-2 border-orange-100 pb-3 uppercase tracking-tighter">
+                    <Users size={24} className="text-orange-500"/> Team Regalo ({contributions.length})
+                  </h3>
+                  <div className="space-y-4 max-h-[450px] overflow-y-auto pr-3">
+                    {contributions.map((c) => (
+                      <div key={c.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 font-black text-gray-800 text-lg">
+                            {c.contributor_name}
+                            {Number(c.support_amount) > 0 && <div className="bg-orange-100 p-1.5 rounded-full"><Coffee size={14} className="text-orange-600"/></div>}
                           </div>
-                          {c.message && <p className="text-sm text-gray-600 mt-1">{c.message}</p>}
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString()}</span>
-                            {isCreator && c.payment_status === 'promised' && (
-                              <button onClick={() => handleConfirmCashPayment(c.id)} className="text-xs bg-green-500 text-white px-2 py-1 rounded-md flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Conferma</button>
-                            )}
-                          </div>
+                          <span className="text-orange-600 font-black text-xl">{formatCurrency(Number(c.base_amount), event.currency)}</span>
                         </div>
-                      ))
-                    )}
+                        {c.message && <p className="text-sm text-gray-500 mt-3 font-medium bg-white p-3 rounded-xl border border-gray-100 italic">"{c.message}"</p>}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="flex items-center gap-2 text-xl font-bold text-gray-800 mb-4"><MessageSquare className="w-6 h-6 text-pink-500" /> {t('event.wishes')} ({wishes.length})</h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    {wishes.length === 0 ? <p className="text-gray-500 text-sm">{t('event.noWishes')}</p> : (
-                      wishes.map((w) => (
-                        <div key={w.id} className="bg-gradient-to-br from-pink-50 to-yellow-50 rounded-lg p-4">
-                          <div className="font-semibold text-gray-800 mb-1">{w.author_name}</div>
-                          <p className="text-gray-700 text-sm">{w.message}</p>
-                        </div>
-                      ))
-                    )}
+                  <h3 className="flex items-center gap-3 font-black text-gray-800 mb-6 text-xl border-b-2 border-pink-100 pb-3 uppercase tracking-tighter">
+                    <MessageSquare size={24} className="text-pink-500"/> Bacheca Auguri
+                  </h3>
+                  <div className="space-y-4 max-h-[450px] overflow-y-auto">
+                    {wishes.map((w) => (
+                      <div key={w.id} className="bg-gradient-to-br from-pink-50 to-white rounded-2xl p-5 border border-pink-100 shadow-sm relative overflow-hidden">
+                        <div className="font-black text-pink-600 mb-2 text-lg uppercase tracking-tight">{w.author_name}</div>
+                        <p className="text-gray-700 leading-relaxed font-medium">{w.message}</p>
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><MessageSquare size={40}/></div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -354,8 +246,8 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
         <Footer onCreateEventClick={() => {}} />
       </div>
 
-      {showContributeForm && <ContributionForm eventId={event.id} currency={event.currency} budgetGoal={event.budget_goal} paypalEmail={event.paypal_email} satispayId={event.satispay_id} organizerName={event.celebrant_name} eventDate={event.event_date} onClose={() => setShowContributeForm(false)} onSuccess={handleContributionAdded} />}
-      {showWishForm && <WishForm eventId={event.id} onClose={() => setShowWishForm(false)} onSuccess={handleWishAdded} />}
+      {showContributeForm && <ContributionForm eventId={event.id} currency={event.currency} budgetGoal={event.budget_goal} paypalEmail={event.paypal_email} satispayId={event.satispay_id} organizerName={event.celebrant_name} eventDate={event.event_date} onClose={() => setShowContributeForm(false)} onSuccess={() => {}} />}
+      {showWishForm && <WishForm eventId={event.id} onClose={() => setShowWishForm(false)} onSuccess={() => {}} />}
       {showQRCode && <QRCodeModal url={window.location.href} celebrantName={event.celebrant_name} onClose={() => setShowQRCode(false)} />}
     </>
   );
