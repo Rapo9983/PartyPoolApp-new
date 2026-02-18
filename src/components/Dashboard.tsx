@@ -23,8 +23,43 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
   const [showGoalReachedModal, setShowGoalReachedModal] = useState(false);
   const [goalReachedEvent, setGoalReachedEvent] = useState<Event | null>(null);
 
+  // Caricamento iniziale e sottoscrizione Realtime
   useEffect(() => {
+    if (!user) return;
+
     loadEvents();
+
+    // Sottoscrizione ai cambiamenti in tempo reale della tabella 'events'
+    const channel = supabase
+      .channel('dashboard-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'events',
+          filter: `creator_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updatedEvent = payload.new as any;
+          setEvents((currentEvents) =>
+            currentEvents.map((ev) =>
+              ev.id === updatedEvent.id
+                ? {
+                    ...updatedEvent,
+                    budget_goal: Number(updatedEvent.budget_goal),
+                    current_amount: Number(updatedEvent.current_amount),
+                  }
+                : ev
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
@@ -229,11 +264,23 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
                 </div>
                 <div className="p-6">
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+                  
+                  {/* Barra di progresso visuale */}
+                  <div className="w-full bg-gray-100 rounded-full h-2.5 mb-4">
+                    <div 
+                      className="bg-gradient-to-r from-orange-500 to-pink-500 h-2.5 rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.min((event.current_amount / event.budget_goal) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <div className="text-orange-600 font-semibold">
                       {t('dashboard.goal')}: {formatCurrency(Number(event.budget_goal), event.currency)}
                     </div>
-                    <ExternalLink className="w-5 h-5 text-gray-400" />
+                    <div className="text-xs text-gray-400 flex items-center gap-1">
+                      {formatCurrency(event.current_amount, event.currency)} raccolti
+                      <ExternalLink className="w-4 h-4" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -243,7 +290,6 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
       </div>
 
       <Footer onCreateEventClick={onCreateEvent} />
-
       <InstallPWABanner />
 
       {showGoalReachedModal && goalReachedEvent && (
