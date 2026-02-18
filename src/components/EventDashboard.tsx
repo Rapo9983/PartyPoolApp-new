@@ -1,19 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, Event } from '../lib/supabaseClient';
 import { useLanguage } from '../contexts/LanguageContext';
 import { formatCurrency } from '../lib/utils';
 import { 
-  Calendar, 
-  MapPin, 
-  Clock, 
-  Gift, 
-  Users, 
-  ExternalLink, 
-  Share2, 
-  Check, 
-  Copy,
-  Info
+  Calendar, MapPin, Clock, Gift, Users, Share2, 
+  ExternalLink, ChevronRight, copy, Check, Info,
+  Heart, Star, PartyPopper
 } from 'lucide-react';
 
 const PayPalIcon = () => (
@@ -39,182 +32,227 @@ export default function EventDashboard() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const loadEvent = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .eq('slug', slug)
-          .single();
-        if (error) throw error;
-        setEvent(data);
-      } catch (err) {
-        console.error('Error loading event:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadEvent();
   }, [slug]);
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const loadEvent = async () => {
+    try {
+      const { data, error } = await supabase.from('events').select('*').eq('slug', slug).single();
+      if (error) throw error;
+      setEvent(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black uppercase text-gray-400 tracking-widest animate-pulse">{t('common.loading')}...</div>;
-  if (!event) return <div className="min-h-screen flex items-center justify-center font-bold">{t('event.notFound')}</div>;
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-orange-500"></div>
+    </div>
+  );
+
+  if (!event) return <div className="min-h-screen flex items-center justify-center font-bold text-2xl">{t('event.notFound')}</div>;
 
   const shareAmount = event.contribution_type === 'equal_shares' && event.participants_count
     ? event.budget_goal / event.participants_count
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 font-sans pb-20">
-      {/* HEADER DINAMICO */}
-      <div className="relative h-80 md:h-[450px] bg-gray-900 overflow-hidden">
-        {event.celebrant_image ? (
-          <img src={event.celebrant_image} alt="" className="w-full h-full object-cover opacity-60" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-r from-orange-400 to-pink-500 opacity-80" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-8 text-white text-center">
-          <div className="inline-block p-1 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 mb-4 shadow-2xl">
+    <div className="min-h-screen bg-[#F8F9FD] font-sans pb-24">
+      {/* HERO SECTION ORIGINALE */}
+      <div className="relative h-[40vh] md:h-[50vh] min-h-[350px] w-full">
+        <div className="absolute inset-0">
+          <img 
+            src={event.celebrant_image || 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&q=80'} 
+            className="w-full h-full object-cover"
+            alt=""
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#F8F9FD]" />
+        </div>
+
+        {/* Floating Badges */}
+        <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20">
+          <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2">
+            <PartyPopper className="w-5 h-5 text-orange-500" />
+            <span className="font-black text-gray-800 uppercase text-xs tracking-tighter">Evento Speciale</span>
+          </div>
+          <button onClick={handleShare} className="bg-white p-3 rounded-full shadow-xl hover:scale-110 transition-transform active:scale-95">
+            {copied ? <Check className="w-5 h-5 text-green-500" /> : <Share2 className="w-5 h-5 text-gray-700" />}
+          </button>
+        </div>
+
+        {/* Celebrant Info */}
+        <div className="absolute bottom-10 left-0 right-0 px-6 flex flex-col items-center">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 bg-orange-400 rounded-full blur-2xl opacity-40 animate-pulse" />
             <img 
               src={event.celebrant_image || `https://ui-avatars.com/api/?name=${event.celebrant_name}&background=random`} 
-              className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white"
+              className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white shadow-2xl relative z-10 object-cover"
               alt={event.celebrant_name}
             />
           </div>
-          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter drop-shadow-lg">
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 uppercase tracking-tighter text-center">
             {event.celebrant_name}
           </h1>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto -mt-12 px-4 relative z-20">
-        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-white p-8 md:p-10">
+      <div className="max-w-2xl mx-auto px-4 -mt-6 relative z-30">
+        {/* INFO CARD PRINCIPALE */}
+        <div className="bg-white rounded-[2.5rem] shadow-xl border border-white/60 p-8 space-y-10">
           
-          {/* GRID INFO */}
-          <div className="grid grid-cols-2 gap-4 mb-10">
-            <div className="bg-orange-50 p-5 rounded-3xl border border-orange-100 flex flex-col items-center text-center">
-              <Calendar className="w-7 h-7 text-orange-500 mb-2" />
-              <span className="text-[10px] font-black uppercase text-orange-400 tracking-widest">{t('event.eventDate')}</span>
-              <span className="font-bold text-gray-800">{new Date(event.event_date).toLocaleDateString()}</span>
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-orange-50/50 p-6 rounded-[2rem] border border-orange-100/50 flex flex-col items-center justify-center gap-2">
+              <Calendar className="w-6 h-6 text-orange-500" />
+              <div className="text-center">
+                <p className="text-[10px] font-black text-orange-300 uppercase tracking-widest leading-none mb-1">{t('event.eventDate')}</p>
+                <p className="font-black text-gray-800 text-lg">{new Date(event.event_date).toLocaleDateString()}</p>
+              </div>
             </div>
-            <div className="bg-pink-50 p-5 rounded-3xl border border-pink-100 flex flex-col items-center text-center">
-              <Clock className="w-7 h-7 text-pink-500 mb-2" />
-              <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest">{t('event.eventTime')}</span>
-              <span className="font-bold text-gray-800">{event.event_time || '--:--'}</span>
+            <div className="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100/50 flex flex-col items-center justify-center gap-2">
+              <Clock className="w-6 h-6 text-pink-500" />
+              <div className="text-center">
+                <p className="text-[10px] font-black text-pink-300 uppercase tracking-widest leading-none mb-1">{t('event.eventTime')}</p>
+                <p className="font-black text-gray-800 text-lg">{event.event_time || '--:--'}</p>
+              </div>
             </div>
           </div>
 
-          {/* LOCATION */}
+          {/* Location Full-width */}
           {event.location && (
-            <div className="flex items-center gap-4 bg-gray-50 p-5 rounded-3xl mb-10 border border-gray-100">
-              <div className="bg-white p-3 rounded-2xl shadow-sm"><MapPin className="w-6 h-6 text-gray-400" /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">{t('event.location')}</p>
+            <div className="flex items-center gap-4 bg-gray-50/50 p-5 rounded-3xl border border-gray-100">
+              <div className="bg-white p-3 rounded-2xl shadow-sm"><MapPin className="w-6 h-6 text-blue-400" /></div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{t('event.location')}</p>
                 <p className="font-bold text-gray-800">{event.location}</p>
               </div>
+              <ChevronRight className="w-5 h-5 text-gray-300" />
             </div>
           )}
 
-          {/* DESCRIZIONE EVENTO */}
-          <div className="text-center mb-12">
-            <p className="text-xl md:text-2xl font-medium text-gray-600 italic leading-relaxed">
-              "{event.description}"
+          {/* Descrizione con virgolette stilizzate */}
+          <div className="relative py-4">
+            <div className="absolute top-0 left-0 text-6xl text-orange-100 font-serif leading-none italic select-none">“</div>
+            <p className="text-center text-xl text-gray-600 font-medium italic relative z-10 px-8 leading-relaxed">
+              {event.description}
             </p>
           </div>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-12" />
+          <div className="h-px bg-gray-100 w-full" />
 
-          {/* SEZIONE REGALO - IL CUORE DELLA PAGINA */}
-          <div className="space-y-8">
-            <div className="flex items-center justify-center gap-3">
-              <Gift className="w-8 h-8 text-orange-500" />
-              <h2 className="text-2xl font-black uppercase tracking-tighter text-gray-800">Il Regalo di Compleanno</h2>
+          {/* SEZIONE REGALO - RE-INSERITA GRAFICA COMPLESSA */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 justify-center mb-2">
+              <div className="h-px w-8 bg-orange-200" />
+              <Gift className="w-6 h-6 text-orange-500" />
+              <h2 className="text-xl font-black uppercase tracking-tighter text-gray-800">Cosa vogliamo regalare</h2>
+              <div className="h-px w-8 bg-orange-200" />
             </div>
 
-            <div className="bg-gradient-to-br from-orange-500 to-pink-600 rounded-[3rem] p-1 shadow-2xl shadow-orange-200">
-              <div className="bg-white rounded-[2.7rem] p-8 md:p-10 overflow-hidden relative">
+            <div className="bg-gradient-to-br from-orange-400 to-pink-500 rounded-[3rem] p-1.5 shadow-2xl">
+              <div className="bg-white rounded-[2.6rem] p-8 relative overflow-hidden">
                 
-                {/* Visualizzazione Nuova Descrizione Regalo */}
+                {/* Nuova Descrizione Prodotto - MASSIMA EVIDENZA */}
                 {event.gift_description && (
-                  <div className="mb-8 text-center bg-orange-50/50 p-6 rounded-3xl border border-orange-100">
-                    <div className="flex justify-center mb-2"><Info className="w-5 h-5 text-orange-400" /></div>
+                  <div className="bg-orange-50 rounded-[2rem] p-6 mb-8 border border-orange-100 text-center relative">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-orange-100 flex items-center gap-1">
+                      <Star className="w-3 h-3 text-orange-500 fill-orange-500" />
+                      <span className="text-[10px] font-black uppercase text-orange-400">Top Wish</span>
+                    </div>
                     <p className="text-2xl font-black text-gray-800 leading-tight">
                       {event.gift_description}
                     </p>
                   </div>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-8 items-center text-center md:text-left">
-                  <div>
-                    <p className="text-xs font-black uppercase text-gray-400 tracking-[0.2em] mb-2">Obiettivo Raccolta</p>
-                    <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500 italic">
-                      {formatCurrency(event.budget_goal, event.currency)}
-                    </p>
+                {/* Progress Circle / Budget Info */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="text-center md:text-left">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Obiettivo Budget</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl font-black text-gray-900 tracking-tighter">
+                        {formatCurrency(event.budget_goal, event.currency)}
+                      </span>
+                    </div>
                   </div>
-                  
+
                   {shareAmount && (
-                    <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100">
-                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Quota suggerita a testa</p>
-                      <p className="text-3xl font-black text-gray-800">{formatCurrency(shareAmount, event.currency)}</p>
+                    <div className="bg-gray-900 text-white p-6 rounded-[2.5rem] flex flex-col items-center shadow-xl shadow-gray-200">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Quota a testa</span>
+                      <span className="text-3xl font-black tracking-tighter">{formatCurrency(shareAmount, event.currency)}</span>
                     </div>
                   )}
                 </div>
 
                 {event.gift_url && (
-                  <div className="mt-8 flex justify-center">
-                    <a href={event.gift_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-95">
-                      <ExternalLink className="w-4 h-4" /> Vedi il prodotto online
-                    </a>
-                  </div>
+                  <a 
+                    href={event.gift_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="mt-8 flex items-center justify-center gap-2 w-full py-4 border-2 border-gray-100 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 hover:border-orange-200 transition-all text-sm uppercase tracking-widest"
+                  >
+                    <ExternalLink className="w-4 h-4" /> Vedi prodotto su Amazon
+                  </a>
                 )}
               </div>
             </div>
           </div>
 
-          {/* PAGAMENTI - RIPRISTINATI */}
-          <div className="mt-12 space-y-6 text-center">
-            <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Contribuisci con</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {event.paypal_email && (
-                <a 
-                  href={`https://www.paypal.com/paypalme/${event.paypal_email}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 p-5 bg-[#0070ba] text-white rounded-[2rem] font-bold text-lg hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95"
-                >
-                  <PayPalIcon /> PayPal
-                </a>
-              )}
-              {event.satispay_id && (
-                <a 
-                  href={`https://tag.satispay.com/${event.satispay_id}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 p-5 bg-[#f5333f] text-white rounded-[2rem] font-bold text-lg hover:shadow-xl hover:shadow-red-200 transition-all active:scale-95"
-                >
-                  <SatispayIcon /> Satispay
-                </a>
-              )}
+          {/* METODI DI PAGAMENTO ORIGINALI */}
+          <div className="pt-8 space-y-6">
+            <div className="text-center">
+              <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 mb-6">Invia il tuo contributo</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {event.paypal_email && (
+                  <a 
+                    href={`https://www.paypal.com/paypalme/${event.paypal_email}`}
+                    target="_blank"
+                    className="flex items-center justify-between p-6 bg-[#0070ba] text-white rounded-[2rem] shadow-lg shadow-blue-100 hover:translate-y-[-2px] transition-all active:scale-95 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white p-2 rounded-xl"><PayPalIcon /></div>
+                      <span className="font-black text-lg">PayPal</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                )}
+                {event.satispay_id && (
+                  <a 
+                    href={`https://tag.satispay.com/${event.satispay_id}`}
+                    target="_blank"
+                    className="flex items-center justify-between p-6 bg-[#f5333f] text-white rounded-[2rem] shadow-lg shadow-red-100 hover:translate-y-[-2px] transition-all active:scale-95 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white p-2 rounded-xl"><SatispayIcon /></div>
+                      <span className="font-black text-lg">Satispay</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* BOTTONE CONDIVISIONE */}
-          <div className="mt-10 flex justify-center">
-            <button 
-              onClick={handleShare}
-              className="flex items-center gap-2 px-8 py-4 bg-gray-100 rounded-2xl font-black uppercase text-xs tracking-widest text-gray-500 hover:bg-gray-200 transition-all"
-            >
-              {copied ? <><Check className="w-4 h-4 text-green-500" /> Copiato!</> : <><Share2 className="w-4 h-4" /> Condividi Evento</>}
-            </button>
+        {/* Footer info */}
+        <div className="mt-12 text-center text-gray-400 text-sm font-bold flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-pink-400 fill-pink-400" />
+            <span>Organizzato con amore</span>
           </div>
-
         </div>
       </div>
     </div>
