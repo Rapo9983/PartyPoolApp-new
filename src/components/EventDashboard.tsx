@@ -29,16 +29,13 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const [showWishForm, setShowWishForm] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [progressWidth, setProgressWidth] = useState(0);
-  const [showPurchaseMessage, setShowPurchaseMessage] = useState(false);
 
   const isCreator = user && event ? user.id === event.creator_id : false;
 
-  // 1. Caricamento iniziale dei dati
   useEffect(() => {
     loadEventData();
   }, [slug]);
 
-  // 2. Logica Realtime Ottimizzata
   useEffect(() => {
     if (!event?.id) return;
 
@@ -59,7 +56,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               ...prev,
               current_amount: Number(updated.current_amount),
               budget_goal: Number(updated.budget_goal),
-              is_supporter: updated.is_supporter
             } : null);
           }
         }
@@ -67,13 +63,12 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
       .on(
         'postgres_changes',
         {
-          event: '*', // Ascolta nuovi messaggi o conferme pagamenti
+          event: '*',
           schema: 'public',
           table: 'contributions',
           filter: `event_id=eq.${event.id}`,
         },
         () => {
-          // Ricarichiamo le liste per mostrare i nomi aggiornati
           loadContributionsAndWishes(event.id);
         }
       )
@@ -84,14 +79,11 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     };
   }, [event?.id]);
 
-  // 3. Gestione animazione barra di progresso
   useEffect(() => {
     if (event) {
       const current = Number(event.current_amount) || 0;
       const goal = Number(event.budget_goal) || 0;
       const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
-      
-      // Piccolo timeout per innescare l'animazione CSS transition
       const timer = setTimeout(() => setProgressWidth(percentage), 100);
       return () => clearTimeout(timer);
     }
@@ -138,12 +130,10 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
   const handleContributionAdded = () => {
     setShowContributeForm(false);
-    // Non serve loadEventData() perché il Realtime aggiornerà i dati
   };
 
   const handleWishAdded = () => {
     setShowWishForm(false);
-    // Realtime gestirà l'aggiornamento
   };
 
   const handleShare = async () => {
@@ -178,7 +168,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     try {
       const { error } = await supabase.from('contributions').update({ payment_status: 'confirmed' }).eq('id', contributionId);
       if (error) throw error;
-      // Il Realtime aggiornerà automaticamente la UI
     } catch (error) {
       alert('Errore durante la conferma del pagamento');
     }
@@ -222,11 +211,14 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const currentAmount = Number(event.current_amount) || 0;
   const budgetGoal = Number(event.budget_goal) || 0;
   const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
-  const giftImage = event.gift_url ? extractImageFromUrl(event.gift_url) : null;
+  
+  // Calcolo caffè e totale reale per il creatore
+  const totalCaffé = contributions.reduce((acc, c) => acc + (Number(c.support_amount) || 0), 0);
+  const realTotal = contributions.reduce((acc, c) => acc + (Number(c.base_amount) || 0) + (Number(c.support_amount) || 0), 0);
+
   const celebrantImage = event.celebrant_image;
   const ogTitle = language === 'it' ? `Partecipa al regalo per ${event.celebrant_name}!` : `Join us celebrating ${event.celebrant_name}!`;
   const ogDescription = language === 'it' ? 'Contribuisci anche tu su PartyPool!' : 'Contribute on PartyPool!';
-  const ogImage = celebrantImage || giftImage || 'https://images.pexels.com/photos/1729797/pexels-photo-1729797.jpeg?auto=compress&cs=tinysrgb&w=1200';
 
   return (
     <>
@@ -235,13 +227,9 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
         <meta name="description" content={ogDescription} />
         <meta property="og:title" content={ogTitle} />
         <meta property="og:description" content={ogDescription} />
-        <meta property="og:image" content={ogImage} />
+        <meta property="og:image" content={celebrantImage || 'https://images.pexels.com/photos/1729797/pexels-photo-1729797.jpeg?auto=compress&cs=tinysrgb&w=1200'} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={ogTitle} />
-        <meta name="twitter:description" content={ogDescription} />
-        <meta name="twitter:image" content={ogImage} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 p-4">
@@ -311,7 +299,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
               <p className="text-white/90 mb-6">{event.description}</p>
 
-              {/* BARRA DI PROGRESSO DINAMICA */}
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">{t('event.progress')}</span>
@@ -323,10 +310,27 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                     style={{ width: `${progressWidth}%` }}
                   />
                 </div>
-                <div className="text-right text-sm mt-1 text-white/80">
-                  {progressPercentage.toFixed(1)}% {t('event.reached')}
+                <div className="flex justify-between items-center mt-1">
+                  <div className="text-sm text-white/80">
+                    {progressPercentage.toFixed(1)}% {t('event.reached')}
+                  </div>
+                  {totalCaffé > 0 && (
+                    <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                      <Coffee size={14} />
+                      <span>{totalCaffé} {totalCaffé === 1 ? 'Caffè offerto' : 'Caffè offerti'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
+              
+              {isCreator && (
+                <div className="mt-4 p-3 bg-black/10 rounded-lg flex items-center justify-between border border-white/10">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Wallet size={16} /> Incasso Totale (Regali + Caffè):
+                  </div>
+                  <div className="font-bold">{formatCurrency(realTotal, event.currency)}</div>
+                </div>
+              )}
             </div>
 
             <div className="p-8">
@@ -355,7 +359,14 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                       contributions.map((contribution) => (
                         <div key={contribution.id} className={`rounded-lg p-4 ${contribution.payment_status === 'promised' ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50'}`}>
                           <div className="flex justify-between items-start">
-                            <span className="font-semibold text-gray-800">{contribution.contributor_name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-800">{contribution.contributor_name}</span>
+                              {Number(contribution.support_amount) > 0 && (
+                                <div className="bg-orange-100 p-1 rounded-full shadow-sm" title="Ha offerto un caffè!">
+                                  <Coffee size={12} className="text-orange-500" />
+                                </div>
+                              )}
+                            </div>
                             <span className="text-orange-600 font-bold">{formatCurrency(Number(contribution.base_amount), event.currency)}</span>
                           </div>
                           {contribution.message && <p className="text-sm text-gray-600 mt-1">{contribution.message}</p>}
