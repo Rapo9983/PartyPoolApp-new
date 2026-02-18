@@ -299,8 +299,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
               <p className="text-white/90 mb-6">{event.description}</p>
 
-              {/* SEZIONE REGALO RIPRISTINATA */}
-              {event.gift_url && (
+              {(event.gift_description || event.gift_url) && (
                 <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                   <div className="flex items-center gap-4">
                     {giftImage && (
@@ -310,16 +309,21 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                     )}
                     <div className="flex-1">
                       <h3 className="font-bold flex items-center gap-2">
-                        <ShoppingBag size={18} /> {t('event.gift')}
+                        <ShoppingBag size={18} /> Il regalo
                       </h3>
-                      <a 
-                        href={isAmazonLink(event.gift_url) ? addAmazonAffiliateTag(event.gift_url) : event.gift_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm underline flex items-center gap-1 mt-1 opacity-90 hover:opacity-100"
-                      >
-                        {t('event.viewProduct')} <ExternalLink size={12} />
-                      </a>
+                      {event.gift_description && (
+                        <p className="text-sm mt-1 opacity-90">{event.gift_description}</p>
+                      )}
+                      {event.gift_url && (
+                        <a
+                          href={isAmazonLink(event.gift_url) ? addAmazonAffiliateTag(event.gift_url) : event.gift_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm underline flex items-center gap-1 mt-1 opacity-90 hover:opacity-100"
+                        >
+                          Vedi il regalo <ExternalLink size={12} />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
