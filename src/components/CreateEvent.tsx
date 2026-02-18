@@ -44,6 +44,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
     eventTime: '',
     location: '',
     description: '',
+    giftDescription: '', // AGGIUNTO
     budgetGoal: '',
     currency: '€',
     contributionType: 'free' as 'free' | 'equal_shares',
@@ -180,6 +181,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
           event_time: formData.eventTime || null,
           location: formData.location || null,
           description: formData.description,
+          gift_description: formData.giftDescription, // AGGIUNTO AL SALVATAGGIO
           budget_goal: parseFloat(formData.budgetGoal),
           currency: formData.currency,
           contribution_type: formData.contributionType,
@@ -487,6 +489,21 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
                 )}
               </div>
             )}
+
+            <div>
+              <label htmlFor="giftDescription" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <FileText className="w-4 h-4" />
+                Descrizione del regalo (opzionale)
+              </label>
+              <textarea
+                id="giftDescription"
+                value={formData.giftDescription}
+                onChange={(e) => setFormData({ ...formData, giftDescription: e.target.value })}
+                rows={2}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none"
+                placeholder="Esempio: Nintendo Switch OLED Blu/Rosso"
+              />
+            </div>
 
             <div>
               <label htmlFor="giftUrl" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
