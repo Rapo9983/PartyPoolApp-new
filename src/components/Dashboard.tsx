@@ -230,7 +230,7 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
                       {t('dashboard.goal')}: {formatCurrency(Number(event.budget_goal), event.currency)}
                     </div>
                     <div className="text-xs text-gray-400 flex items-center gap-1">
-                      {formatCurrency(event.current_amount, event.currency)} {t('common.collected') || 'raccolti'}
+                     {formatCurrency(event.current_amount, event.currency)} raccolti
                       <ExternalLink className="w-4 h-4" />
                     </div>
                   </div>
