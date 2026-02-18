@@ -302,11 +302,13 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               {(event.gift_description || event.gift_url) && (
                 <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                   <div className="flex items-center gap-4">
-                    {giftImage && (
-                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-white flex-shrink-0">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-white flex-shrink-0 flex items-center justify-center">
+                      {giftImage ? (
                         <img src={giftImage} alt="Gift" className="w-full h-full object-cover" />
-                      </div>
-                    )}
+                      ) : (
+                        <Gift className="w-10 h-10 text-orange-500" />
+                      )}
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-bold flex items-center gap-2">
                         <ShoppingBag size={18} /> Il regalo
