@@ -1,6 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Gift, Globe } from 'lucide-react';
+import { Gift, Globe, LogOut, LayoutDashboard } from 'lucide-react';
 
 interface NavbarProps {
   onSignInClick?: () => void;
@@ -21,65 +21,76 @@ export default function Navbar({ onSignInClick, onDashboardClick }: NavbarProps)
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md shadow-sm z-50">
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md shadow-sm z-[10000] h-20 flex items-center">
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <div className="flex items-center justify-between gap-2">
+          
+          {/* LOGO - Ridotto su mobile per salvare spazio */}
           <button
             onClick={onDashboardClick}
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-2 group shrink-0"
           >
-            <div className="bg-gradient-to-br from-orange-400 to-pink-500 p-2 rounded-lg group-hover:scale-110 transition">
-              <Gift className="w-6 h-6 text-white" />
+            <div className="bg-gradient-to-br from-orange-400 to-pink-500 p-1.5 sm:p-2 rounded-lg group-hover:scale-110 transition shadow-sm">
+              <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+            <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent tracking-tighter">
               PartyPool
             </span>
           </button>
 
-          <div className="hidden md:flex items-center gap-6">
+          {/* MENU CENTRALE - Solo Desktop */}
+          <div className="hidden lg:flex items-center gap-6">
             <button
               onClick={() => navigateToPage('/how-it-works')}
-              className="text-gray-700 hover:text-orange-500 font-medium transition"
+              className="text-gray-600 hover:text-orange-500 font-medium transition text-sm"
             >
               {t('landing.howItWorksTitle')}
             </button>
             <button
               onClick={() => navigateToPage('/faq')}
-              className="text-gray-700 hover:text-orange-500 font-medium transition"
+              className="text-gray-600 hover:text-orange-500 font-medium transition text-sm"
             >
               FAQ
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* AZIONI DESTRA */}
+          <div className="flex items-center gap-1 sm:gap-3">
+            
+            {/* Selettore Lingua - Più compatto */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-gray-700"
+              className="flex items-center gap-1 px-2 py-2 rounded-xl hover:bg-gray-100 transition text-gray-500"
               title={language === 'it' ? 'Switch to English' : 'Passa a Italiano'}
             >
               <Globe className="w-4 h-4" />
-              <span className="text-sm font-medium uppercase">{language}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">{language}</span>
             </button>
 
             {user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 sm:gap-2">
+                {/* Dashboard: Icona su mobile, Testo su Desktop */}
                 <button
                   onClick={onDashboardClick}
-                  className="px-4 py-2 text-gray-700 hover:text-orange-500 font-medium transition"
+                  className="p-2.5 sm:px-4 sm:py-2 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-xl transition-all flex items-center gap-2"
                 >
-                  {t('landing.myEvents')}
+                  <LayoutDashboard size={20} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline text-sm font-bold">{t('landing.myEvents')}</span>
                 </button>
+
+                {/* Logout: Icona rossa e distanziata dal bordo */}
                 <button
                   onClick={() => signOut()}
-                  className="px-4 py-2 text-gray-700 hover:text-orange-500 font-medium transition"
+                  className="p-2.5 sm:px-4 sm:py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all flex items-center gap-2 shrink-0"
                 >
-                  {t('dashboard.signOut')}
+                  <LogOut size={20} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline text-sm font-bold">{t('dashboard.signOut')}</span>
                 </button>
               </div>
             ) : (
               <button
                 onClick={onSignInClick}
-                className="px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-pink-600 transition"
+                className="px-4 py-2 sm:px-6 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition shadow-lg active:scale-95"
               >
                 {t('landing.signIn')}
               </button>
