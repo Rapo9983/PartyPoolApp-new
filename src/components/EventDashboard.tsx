@@ -1,254 +1,222 @@
-import { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { supabase, Event, Contribution, Wish } from '../lib/supabaseClient';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase, Event } from '../lib/supabaseClient';
 import { useLanguage } from '../contexts/LanguageContext';
 import { formatCurrency } from '../lib/utils';
-import { addAmazonAffiliateTag, isAmazonLink, generateCalendarEvent, downloadCalendarFile, createGoogleCalendarUrl } from '../lib/affiliateUtils';
-import { Calendar, Users, MessageSquare, Share2, ArrowLeft, MapPin, Gift, ExternalLink, MessageCircle, Trash2, QrCode, Edit, Coffee, ShoppingBag, CalendarPlus, Wallet, CheckCircle } from 'lucide-react';
-import ContributionForm from './ContributionForm';
-import WishForm from './WishForm';
-import QRCodeModal from './QRCodeModal';
-import Footer from './Footer';
+import { 
+  Calendar, 
+  MapPin, 
+  Clock, 
+  Gift, 
+  Users, 
+  ExternalLink, 
+  Share2, 
+  Check, 
+  Copy,
+  Info
+} from 'lucide-react';
 
-interface EventDashboardProps {
-  slug: string;
-  onBack?: () => void;
-  onEdit?: (eventId: string) => void;
-}
+const PayPalIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20.5 7.9c0 4.4-3.6 8-8 8h-2l-1 5h-3l2-10h4c2.8 0 5-2.2 5-5 0-.6-.1-1.2-.3-1.7 1.4.8 2.3 2.3 2.3 4 0 .2 0 .5-.1.7z" fill="#009cde"/>
+    <path d="M17.2 2.2C16.5 1.5 15.5 1 14.4 1H7.9c-.5 0-.9.4-1 .9L4.5 14.3c-.1.3.2.6.5.6h3l1-5h2c4.4 0 8-3.6 8-8 0-.2 0-.5-.1-.7-.5-.7-1.2-1.2-2-1.5z" fill="#012169"/>
+  </svg>
+);
 
-export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardProps) {
-  const { user } = useAuth();
-  const { t, language } = useLanguage();
-  const [event, setEvent] = useState<any | null>(null);
-  const [contributions, setContributions] = useState<Contribution[]>([]);
-  const [wishes, setWishes] = useState<Wish[]>([]);
+const SatispayIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="2" width="16" height="20" rx="2" stroke="#F5333F" strokeWidth="2" fill="none"/>
+    <circle cx="12" cy="8" r="2" fill="#F5333F"/>
+    <path d="M8 14h8M8 17h8" stroke="#F5333F" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+export default function EventDashboard() {
+  const { slug } = useParams<{ slug: string }>();
+  const { t } = useLanguage();
+  const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
-  const [showContributeForm, setShowContributeForm] = useState(false);
-  const [showWishForm, setShowWishForm] = useState(false);
-  const [showQRCode, setShowQRCode] = useState(false);
-  const [progressWidth, setProgressWidth] = useState(0);
-
-  const isCreator = user && event ? user.id === event.creator_id : false;
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    loadEventData();
+    const loadEvent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+        if (error) throw error;
+        setEvent(data);
+      } catch (err) {
+        console.error('Error loading event:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadEvent();
   }, [slug]);
 
-  useEffect(() => {
-    if (!event?.id) return;
-
-    const channel = supabase
-      .channel(`event-live-${event.id}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'events', filter: `id=eq.${event.id}` },
-        (payload) => {
-          if (payload.new) {
-            setEvent((prev: any) => ({ ...prev, ...payload.new }));
-          }
-        }
-      )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions', filter: `event_id=eq.${event.id}` },
-        () => loadContributionsAndWishes(event.id)
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [event?.id]);
-
-  useEffect(() => {
-    if (event) {
-      const current = Number(event.current_amount) || 0;
-      const goal = Number(event.budget_goal) || 0;
-      const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
-      const timer = setTimeout(() => setProgressWidth(percentage), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [event?.current_amount, event?.budget_goal]);
-
-  const loadEventData = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.from('events').select('*').eq('slug', slug).maybeSingle();
-      if (error) throw error;
-      if (data) setEvent(data);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const loadContributionsAndWishes = async (eventId: string) => {
-    const [cRes, wRes] = await Promise.all([
-      supabase.from('contributions').select('*').eq('event_id', eventId).order('created_at', { ascending: false }),
-      supabase.from('wishes').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
-    ]);
-    if (cRes.data) setContributions(cRes.data);
-    if (wRes.data) setWishes(wRes.data);
-  };
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-black uppercase text-gray-400 tracking-widest animate-pulse">{t('common.loading')}...</div>;
+  if (!event) return <div className="min-h-screen flex items-center justify-center font-bold">{t('event.notFound')}</div>;
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) { await navigator.share({ title: `Party for ${event?.celebrant_name}`, url }); }
-    else { await navigator.clipboard.writeText(url); alert('Link copiato!'); }
-  };
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Caricamento...</div>;
-  if (!event) return <div className="min-h-screen flex items-center justify-center">Evento non trovato</div>;
-
-  const currentAmount = Number(event.current_amount) || 0;
-  const budgetGoal = Number(event.budget_goal) || 0;
-  const progressPercentage = budgetGoal > 0 ? Math.min((currentAmount / budgetGoal) * 100, 100) : 0;
-  const totalCaffé = contributions.reduce((acc, c) => acc + (Number(c.support_amount) || 0), 0);
-  const realTotal = contributions.reduce((acc, c) => acc + (Number(c.base_amount) || 0) + (Number(c.support_amount) || 0), 0);
+  const shareAmount = event.contribution_type === 'equal_shares' && event.participants_count
+    ? event.budget_goal / event.participants_count
+    : null;
 
   return (
-    <>
-      <Helmet><title>{event.celebrant_name} - PartyPool</title></Helmet>
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 p-4 font-sans">
-        <div className="max-w-4xl mx-auto pt-8 pb-12">
-          
-          <div className="mb-6 flex justify-between items-center">
-            <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition">
-              <ArrowLeft className="w-5 h-5" /> Torna indietro
-            </button>
-            {isCreator && (
-              <button onClick={() => onEdit?.(event.id)} className="bg-orange-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-600 transition shadow-sm">
-                <Edit className="w-4 h-4" /> Modifica Evento
-              </button>
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 font-sans pb-20">
+      {/* HEADER DINAMICO */}
+      <div className="relative h-80 md:h-[450px] bg-gray-900 overflow-hidden">
+        {event.celebrant_image ? (
+          <img src={event.celebrant_image} alt="" className="w-full h-full object-cover opacity-60" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-orange-400 to-pink-500 opacity-80" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-8 text-white text-center">
+          <div className="inline-block p-1 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 mb-4 shadow-2xl">
+            <img 
+              src={event.celebrant_image || `https://ui-avatars.com/api/?name=${event.celebrant_name}&background=random`} 
+              className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white"
+              alt={event.celebrant_name}
+            />
           </div>
-
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white">
-            <div className="bg-gradient-to-br from-orange-400 via-pink-400 to-yellow-400 p-8 text-white">
-              
-              <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
-                <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white/20 backdrop-blur-md border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center">
-                    {event.celebrant_image ? <img src={event.celebrant_image} className="w-full h-full object-cover" /> : <Gift className="w-12 h-12" />}
-                  </div>
-                  <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tight">{event.celebrant_name}</h1>
-                    <div className="flex items-center gap-3 mt-2 opacity-90 text-sm md:text-base">
-                      <Calendar size={18}/> {new Date(event.event_date).toLocaleDateString()}
-                      {event.location && <><span className="opacity-50">|</span> <MapPin size={18}/> {event.location}</>}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setShowQRCode(true)} className="bg-white/20 p-3 rounded-2xl hover:bg-white/30 transition backdrop-blur-sm"><QrCode size={22}/></button>
-                  <button onClick={handleShare} className="bg-white/20 p-3 rounded-2xl hover:bg-white/30 transition backdrop-blur-sm"><Share2 size={22}/></button>
-                </div>
-              </div>
-
-              <p className="mb-8 text-lg md:text-xl font-medium leading-relaxed bg-black/5 p-4 rounded-2xl">{event.description}</p>
-
-              {/* SEZIONE REGALO: MOSTRA DESCRIZIONE E LINK */}
-              {(event.gift_url || event.gift_description) && (
-                <div className="mb-8 bg-white/20 backdrop-blur-md rounded-2xl p-6 border border-white/30 shadow-lg">
-                  <div className="flex items-center gap-3 mb-3">
-                    <ShoppingBag className="text-white" size={24} />
-                    <h3 className="font-bold text-xl uppercase tracking-wider text-white">
-                      {language === 'it' ? 'Il Regalo' : 'The Gift'}
-                    </h3>
-                  </div>
-                  
-                  {event.gift_description && (
-                    <p className="text-white font-semibold text-lg mb-4 leading-snug">
-                      {event.gift_description}
-                    </p>
-                  )}
-
-                  {event.gift_url && (
-                    <a 
-                      href={isAmazonLink(event.gift_url) ? addAmazonAffiliateTag(event.gift_url) : event.gift_url}
-                      target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-white text-orange-600 px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform shadow-md"
-                    >
-                      {language === 'it' ? 'Apri link regalo' : 'Open gift link'} <ExternalLink size={18} />
-                    </a>
-                  )}
-                </div>
-              )}
-
-              <div className="bg-black/10 backdrop-blur-sm rounded-2xl p-5 border border-white/10">
-                <div className="flex justify-between items-center mb-3 font-bold text-sm tracking-widest uppercase">
-                  <span>Obiettivo Regalo</span>
-                  <span>{formatCurrency(currentAmount, event.currency)} / {formatCurrency(budgetGoal, event.currency)}</span>
-                </div>
-                <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden shadow-inner border border-white/10">
-                  <div className="bg-white h-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.8)]" style={{ width: `${progressWidth}%` }} />
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <div className="bg-white/20 px-3 py-1 rounded-lg text-xs font-bold">{progressPercentage.toFixed(0)}% Raggiunto</div>
-                  {totalCaffé > 0 && (
-                    <div className="flex items-center gap-2 bg-white text-orange-600 px-4 py-1.5 rounded-full text-sm font-black animate-bounce shadow-lg">
-                      <Coffee size={16} /> {totalCaffé} {totalCaffé === 1 ? 'Caffè offerto' : 'Caffè offerti'}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {isCreator && (
-                <div className="mt-6 p-4 bg-black/20 rounded-2xl flex items-center justify-between border border-white/10">
-                  <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-tight"><Wallet size={20}/> Incasso Reale (Regali + Caffè):</span>
-                  <span className="font-black text-2xl">{formatCurrency(realTotal, event.currency)}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="p-8">
-              <div className="grid md:grid-cols-2 gap-4 mb-10">
-                <button onClick={() => setShowContributeForm(true)} className="bg-orange-500 text-white py-5 rounded-2xl font-black hover:bg-orange-600 transition shadow-xl text-xl tracking-tight uppercase">Partecipa al Regalo</button>
-                <button onClick={() => setShowWishForm(true)} className="bg-pink-500 text-white py-5 rounded-2xl font-black hover:bg-pink-600 transition flex items-center justify-center gap-3 shadow-xl text-xl tracking-tight uppercase"><MessageSquare size={24}/> Fai gli Auguri</button>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-12">
-                <div>
-                  <h3 className="flex items-center gap-3 font-black text-gray-800 mb-6 text-xl border-b-2 border-orange-100 pb-3 uppercase tracking-tighter">
-                    <Users size={24} className="text-orange-500"/> Team Regalo ({contributions.length})
-                  </h3>
-                  <div className="space-y-4 max-h-[450px] overflow-y-auto pr-3">
-                    {contributions.map((c) => (
-                      <div key={c.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2 font-black text-gray-800 text-lg">
-                            {c.contributor_name}
-                            {Number(c.support_amount) > 0 && <div className="bg-orange-100 p-1.5 rounded-full"><Coffee size={14} className="text-orange-600"/></div>}
-                          </div>
-                          <span className="text-orange-600 font-black text-xl">{formatCurrency(Number(c.base_amount), event.currency)}</span>
-                        </div>
-                        {c.message && <p className="text-sm text-gray-500 mt-3 font-medium bg-white p-3 rounded-xl border border-gray-100 italic">"{c.message}"</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="flex items-center gap-3 font-black text-gray-800 mb-6 text-xl border-b-2 border-pink-100 pb-3 uppercase tracking-tighter">
-                    <MessageSquare size={24} className="text-pink-500"/> Bacheca Auguri
-                  </h3>
-                  <div className="space-y-4 max-h-[450px] overflow-y-auto">
-                    {wishes.map((w) => (
-                      <div key={w.id} className="bg-gradient-to-br from-pink-50 to-white rounded-2xl p-5 border border-pink-100 shadow-sm relative overflow-hidden">
-                        <div className="font-black text-pink-600 mb-2 text-lg uppercase tracking-tight">{w.author_name}</div>
-                        <p className="text-gray-700 leading-relaxed font-medium">{w.message}</p>
-                        <div className="absolute top-0 right-0 p-2 opacity-10"><MessageSquare size={40}/></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter drop-shadow-lg">
+            {event.celebrant_name}
+          </h1>
         </div>
-        <Footer onCreateEventClick={() => {}} />
       </div>
 
-      {showContributeForm && <ContributionForm eventId={event.id} currency={event.currency} budgetGoal={event.budget_goal} paypalEmail={event.paypal_email} satispayId={event.satispay_id} organizerName={event.celebrant_name} eventDate={event.event_date} onClose={() => setShowContributeForm(false)} onSuccess={() => {}} />}
-      {showWishForm && <WishForm eventId={event.id} onClose={() => setShowWishForm(false)} onSuccess={() => {}} />}
-      {showQRCode && <QRCodeModal url={window.location.href} celebrantName={event.celebrant_name} onClose={() => setShowQRCode(false)} />}
-    </>
+      <div className="max-w-3xl mx-auto -mt-12 px-4 relative z-20">
+        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-white p-8 md:p-10">
+          
+          {/* GRID INFO */}
+          <div className="grid grid-cols-2 gap-4 mb-10">
+            <div className="bg-orange-50 p-5 rounded-3xl border border-orange-100 flex flex-col items-center text-center">
+              <Calendar className="w-7 h-7 text-orange-500 mb-2" />
+              <span className="text-[10px] font-black uppercase text-orange-400 tracking-widest">{t('event.eventDate')}</span>
+              <span className="font-bold text-gray-800">{new Date(event.event_date).toLocaleDateString()}</span>
+            </div>
+            <div className="bg-pink-50 p-5 rounded-3xl border border-pink-100 flex flex-col items-center text-center">
+              <Clock className="w-7 h-7 text-pink-500 mb-2" />
+              <span className="text-[10px] font-black uppercase text-pink-400 tracking-widest">{t('event.eventTime')}</span>
+              <span className="font-bold text-gray-800">{event.event_time || '--:--'}</span>
+            </div>
+          </div>
+
+          {/* LOCATION */}
+          {event.location && (
+            <div className="flex items-center gap-4 bg-gray-50 p-5 rounded-3xl mb-10 border border-gray-100">
+              <div className="bg-white p-3 rounded-2xl shadow-sm"><MapPin className="w-6 h-6 text-gray-400" /></div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">{t('event.location')}</p>
+                <p className="font-bold text-gray-800">{event.location}</p>
+              </div>
+            </div>
+          )}
+
+          {/* DESCRIZIONE EVENTO */}
+          <div className="text-center mb-12">
+            <p className="text-xl md:text-2xl font-medium text-gray-600 italic leading-relaxed">
+              "{event.description}"
+            </p>
+          </div>
+
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-12" />
+
+          {/* SEZIONE REGALO - IL CUORE DELLA PAGINA */}
+          <div className="space-y-8">
+            <div className="flex items-center justify-center gap-3">
+              <Gift className="w-8 h-8 text-orange-500" />
+              <h2 className="text-2xl font-black uppercase tracking-tighter text-gray-800">Il Regalo di Compleanno</h2>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-500 to-pink-600 rounded-[3rem] p-1 shadow-2xl shadow-orange-200">
+              <div className="bg-white rounded-[2.7rem] p-8 md:p-10 overflow-hidden relative">
+                
+                {/* Visualizzazione Nuova Descrizione Regalo */}
+                {event.gift_description && (
+                  <div className="mb-8 text-center bg-orange-50/50 p-6 rounded-3xl border border-orange-100">
+                    <div className="flex justify-center mb-2"><Info className="w-5 h-5 text-orange-400" /></div>
+                    <p className="text-2xl font-black text-gray-800 leading-tight">
+                      {event.gift_description}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid md:grid-cols-2 gap-8 items-center text-center md:text-left">
+                  <div>
+                    <p className="text-xs font-black uppercase text-gray-400 tracking-[0.2em] mb-2">Obiettivo Raccolta</p>
+                    <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500 italic">
+                      {formatCurrency(event.budget_goal, event.currency)}
+                    </p>
+                  </div>
+                  
+                  {shareAmount && (
+                    <div className="bg-gray-50 p-4 rounded-3xl border border-gray-100">
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Quota suggerita a testa</p>
+                      <p className="text-3xl font-black text-gray-800">{formatCurrency(shareAmount, event.currency)}</p>
+                    </div>
+                  )}
+                </div>
+
+                {event.gift_url && (
+                  <div className="mt-8 flex justify-center">
+                    <a href={event.gift_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-95">
+                      <ExternalLink className="w-4 h-4" /> Vedi il prodotto online
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* PAGAMENTI - RIPRISTINATI */}
+          <div className="mt-12 space-y-6 text-center">
+            <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Contribuisci con</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {event.paypal_email && (
+                <a 
+                  href={`https://www.paypal.com/paypalme/${event.paypal_email}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 p-5 bg-[#0070ba] text-white rounded-[2rem] font-bold text-lg hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95"
+                >
+                  <PayPalIcon /> PayPal
+                </a>
+              )}
+              {event.satispay_id && (
+                <a 
+                  href={`https://tag.satispay.com/${event.satispay_id}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 p-5 bg-[#f5333f] text-white rounded-[2rem] font-bold text-lg hover:shadow-xl hover:shadow-red-200 transition-all active:scale-95"
+                >
+                  <SatispayIcon /> Satispay
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* BOTTONE CONDIVISIONE */}
+          <div className="mt-10 flex justify-center">
+            <button 
+              onClick={handleShare}
+              className="flex items-center gap-2 px-8 py-4 bg-gray-100 rounded-2xl font-black uppercase text-xs tracking-widest text-gray-500 hover:bg-gray-200 transition-all"
+            >
+              {copied ? <><Check className="w-4 h-4 text-green-500" /> Copiato!</> : <><Share2 className="w-4 h-4" /> Condividi Evento</>}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
   );
 }
