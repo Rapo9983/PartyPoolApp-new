@@ -487,7 +487,27 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
                 )}
               </div>
             )}
+{/* DESCRIZIONE DEL REGALO */}
+<div>
+  <label htmlFor="giftDescription" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+    <FileText className="w-4 h-4" />
+    {t('event.giftDescriptionLabel')}
+  </label>
+  <textarea
+    id="giftDescription"
+    value={formData.giftDescription}
+    onChange={(e) => setFormData({ ...formData, giftDescription: e.target.value })}
+    rows={2}
+    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none"
+    placeholder={t('event.giftDescriptionPlaceholder')}
+  />
+</div>
 
+{/* CAMPO LINK REGALO (Già esistente, lascialo sotto) */}
+<div>
+  <label htmlFor="giftUrl" ...>
+  ...
+</div>
             <div>
               <label htmlFor="giftUrl" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                 <Gift className="w-4 h-4" />
