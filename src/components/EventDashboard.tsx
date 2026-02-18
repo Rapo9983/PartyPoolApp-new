@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { supabase, Event, Contribution, Wish } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { extractImageFromUrl, formatCurrency } from '../lib/utils';
+import { formatCurrency } from '../lib/utils';
 import { addAmazonAffiliateTag, isAmazonLink, generateCalendarEvent, downloadCalendarFile, createGoogleCalendarUrl } from '../lib/affiliateUtils';
 import { Calendar, Users, MessageSquare, Share2, ArrowLeft, MapPin, Gift, ExternalLink, MessageCircle, Trash2, QrCode, Edit, Coffee, ShoppingBag, CalendarPlus, Wallet, CheckCircle } from 'lucide-react';
 import ContributionForm from './ContributionForm';
@@ -180,7 +180,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   const totalCaffé = contributions.reduce((acc, c) => acc + (Number(c.support_amount) || 0), 0);
   const realTotal = contributions.reduce((acc, c) => acc + (Number(c.base_amount) || 0) + (Number(c.support_amount) || 0), 0);
 
-  const giftImage = event.gift_url ? extractImageFromUrl(event.gift_url) : null;
   const celebrantImage = event.celebrant_image;
 
   // Fallback testi traduzioni
@@ -191,7 +190,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     <>
       <Helmet>
         <title>{event.celebrant_name} - PartyPool</title>
-        <meta property="og:image" content={celebrantImage || giftImage || ''} />
+        <meta property="og:image" content={celebrantImage || ''} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 p-4">
@@ -246,33 +245,29 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
 
               <p className="text-white/90 mb-6">{event.description}</p>
 
-              {/* SEZIONE REGALO OTTIMIZZATA */}
-              {event.gift_url && (
-                <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="flex items-center gap-4">
-                    {giftImage ? (
-                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-white flex-shrink-0 flex items-center justify-center shadow-inner">
-                        <img src={giftImage} alt="Gift" className="w-full h-full object-contain p-1" />
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <ShoppingBag size={30} className="text-white/50" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-bold flex items-center gap-2 text-white">
-                        <ShoppingBag size={18} /> {labelGift}
-                      </h3>
-                      <a 
-                        href={isAmazonLink(event.gift_url) ? addAmazonAffiliateTag(event.gift_url) : event.gift_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm underline flex items-center gap-1 mt-1 text-white/90 hover:text-white transition-colors"
-                      >
-                        {labelViewProduct} <ExternalLink size={12} />
-                      </a>
-                    </div>
-                  </div>
+              {/* SEZIONE REGALO - SOLO TESTO E LINK */}
+              {(event.gift_url || event.gift_description) && (
+                <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                  <h3 className="font-bold flex items-center gap-2 text-white mb-2 text-lg">
+                    <ShoppingBag size={20} /> {labelGift}
+                  </h3>
+                  
+                  {event.gift_description && (
+                    <p className="text-white/90 text-sm mb-3 italic leading-relaxed">
+                      "{event.gift_description}"
+                    </p>
+                  )}
+
+                  {event.gift_url && (
+                    <a 
+                      href={isAmazonLink(event.gift_url) ? addAmazonAffiliateTag(event.gift_url) : event.gift_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition-all border border-white/10"
+                    >
+                      {labelViewProduct} <ExternalLink size={14} />
+                    </a>
+                  )}
                 </div>
               )}
 
