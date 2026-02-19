@@ -223,7 +223,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   return (
     <>
       <Helmet>
-       <title>PartyPool</title>
+        <title>PartyPool</title>
         <meta name="description" content={ogDescription} />
         <meta property="og:title" content={ogTitle} />
         <meta property="og:description" content={ogDescription} />
@@ -382,7 +382,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="flex items-center gap-2 text-xl font-bold text-gray-800 mb-4">
-                    <Users className="w-6 h-6 text-orange-500" /> {t('event.contributions')} ({contributions.length})
+                    <Users className="w-6 h-6 text-orange-500" /> Contributi ({contributions.length})
                   </h3>
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                     {contributions.length === 0 ? (
@@ -401,7 +401,6 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                             </div>
                             <span className="text-orange-600 font-bold">{formatCurrency(Number(contribution.base_amount), event.currency)}</span>
                           </div>
-                          {contribution.message && <p className="text-sm text-gray-600 mt-1">{contribution.message}</p>}
                           <div className="flex justify-between items-center mt-2">
                             <span className="text-xs text-gray-400">{new Date(contribution.created_at).toLocaleDateString()}</span>
                             {isCreator && contribution.payment_status === 'promised' && (
