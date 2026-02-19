@@ -23,6 +23,9 @@ function AppContent() {
 
   useEffect(() => {
     const path = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    const isRegistrationRedirect = params.get('redirect') === 'true' && params.get('contribution_id');
+
     if (path.startsWith('/event/')) {
       const slug = path.split('/event/')[1];
       if (slug) {
@@ -37,6 +40,8 @@ function AppContent() {
       setView('faq');
     } else if (path === '/nuova-password' || path === '/reset-password') {
       setView('reset-password');
+    } else if (path === '/registrazione' || isRegistrationRedirect) {
+      setView('auth');
     } else if (user) {
       const savedView = localStorage.getItem('currentView');
       const savedEventId = localStorage.getItem('editingEventId');
