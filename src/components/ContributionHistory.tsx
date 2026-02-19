@@ -142,7 +142,7 @@ export default function ContributionHistory({ onViewEvent }: ContributionHistory
           </div>
           <div>
             <h3 className="text-3xl font-black uppercase tracking-tighter">La Tua Timeline</h3>
-            <p className="text-white/80 text-sm font-semibold">Memoria storica della tua generosità</p>
+            <p className="text-white/80 text-sm font-semibold">I regali a cui hai contribuito</p>
           </div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mt-4">
