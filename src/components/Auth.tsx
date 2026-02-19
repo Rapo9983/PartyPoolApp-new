@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../lib/supabaseClient';
 import { LogIn, UserPlus, Gift } from 'lucide-react';
 
 export default function Auth() {
@@ -11,8 +12,43 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const { signIn, signUp, resetPassword } = useAuth();
+  const [contributionId, setContributionId] = useState<string | null>(null);
+  const { signIn, signUp, resetPassword, user } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    const contribId = params.get('contribution_id');
+
+    if (redirect === 'true' && contribId) {
+      setContributionId(contribId);
+      setIsLogin(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && contributionId) {
+      linkContributionToUser();
+    }
+  }, [user, contributionId]);
+
+  const linkContributionToUser = async () => {
+    if (!user || !contributionId) return;
+
+    try {
+      const { error } = await supabase
+        .from('contributions')
+        .update({ contributor_user_id: user.id })
+        .eq('id', contributionId);
+
+      if (error) {
+        console.error('Error linking contribution:', error);
+      }
+    } catch (err) {
+      console.error('Error linking contribution:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,8 +107,17 @@ export default function Auth() {
           {t('app.name')}
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          {isForgotPassword ? t('auth.resetTitle') : isLogin ? t('auth.welcome') : t('auth.create')}
+          {contributionId ? 'Crea un account per salvare il tuo regalo' :
+           isForgotPassword ? t('auth.resetTitle') : isLogin ? t('auth.welcome') : t('auth.create')}
         </p>
+
+        {contributionId && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-orange-800 font-semibold">
+              Registrandoti potrai tenere traccia di questo regalo e di tutti quelli futuri!
+            </p>
+          </div>
+        )}
 
         {isForgotPassword && (
           <p className="text-center text-gray-500 text-sm mb-6">
