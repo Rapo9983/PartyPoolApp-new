@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Event } from '../lib/supabaseClient';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Calendar, LogOut, Gift, ExternalLink, Trash2, Edit, Heart } from 'lucide-react';
+import { Plus, Calendar, Gift, ExternalLink, Trash2, Edit, Heart } from 'lucide-react';
 import Footer from './Footer';
 import GoalReachedModal from './GoalReachedModal';
 import InstallPWABanner from './InstallPWABanner';
@@ -123,14 +123,6 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
     setGoalReachedEvent(null);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
   const handleDeleteEvent = async (eventId: string, eventName: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -158,31 +150,6 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-orange-400 to-pink-500 p-2 rounded-lg">
-                <Gift className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-                {t('app.name')}
-              </h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.email}</span>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
-              >
-                <LogOut className="w-5 h-5" />
-                {t('dashboard.signOut')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-8">
           <div>
