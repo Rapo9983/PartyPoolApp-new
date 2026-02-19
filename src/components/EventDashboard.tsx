@@ -223,7 +223,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
   return (
     <>
       <Helmet>
-        <title>{event.celebrant_name} - PartyPool</title>
+       <title>PartyPool</title>
         <meta name="description" content={ogDescription} />
         <meta property="og:title" content={ogTitle} />
         <meta property="og:description" content={ogDescription} />
