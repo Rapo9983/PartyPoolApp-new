@@ -401,14 +401,44 @@ const translations = {
     'howItWorks.ctaButton': 'Crea Ora il Tuo Evento',
     'faq.title': 'Domande Frequenti',
     'faq.subtitle': 'Tutto quello che devi sapere su PartyPool',
-    'faq.question1': 'PartyPool gestisce i soldi?',
-    'faq.answer1': 'No, non gestiamo mai i soldi direttamente. I contributi vanno direttamente dai tuoi invitati a te tramite PayPal o Satispay. PartyPool aiuta semplicemente a coordinare la raccolta e traccia il progresso verso il tuo obiettivo.',
-    'faq.question2': 'Quanto costa usare PartyPool?',
-    'faq.answer2': 'PartyPool è completamente gratuito sia per gli organizzatori che per gli invitati. Non applichiamo commissioni o costi. Per mantenere il servizio gratuito, guadagniamo una piccola commissione come Affiliato Amazon quando i regali vengono acquistati tramite link Amazon.',
-    'faq.question3': 'Devo per forza comprare il regalo su Amazon?',
-    'faq.answer3': 'Assolutamente no! Puoi aggiungere qualsiasi link (Amazon, altri negozi, o nessun link). La funzione di affiliazione Amazon aiuta semplicemente a supportare PartyPool quando scegli di usarla, ma è completamente opzionale.',
-    'faq.question4': 'Posso condividere link a negozi esterni?',
-    'faq.answer4': 'Sì! Puoi aggiungere link a qualsiasi negozio online o fisico. Se preferisci, puoi anche solo descrivere il regalo senza aggiungere alcun link. È completamente flessibile.',
+    'faq.question1': 'Quanto costa usare PartyPool?',
+    'faq.answer1': 'Il servizio è completamente gratuito. Non ci sono costi di iscrizione né commissioni sulle raccolte, poiché PartyPool non trattiene alcuna percentuale sui contributi.',
+    'faq.question2': 'Gli invitati devono registrarsi per contribuire?',
+    'faq.answer2': 'No, è possibile contribuire in pochi secondi senza account. La registrazione è facoltativa e utile solo se si desidera salvare e consultare lo storico di tutti i regali fatti nel tempo.',
+    
+    'faq.question3': 'Come avviene il pagamento?',
+    'faq.answer3': 'PartyPool è un tramite e un coordinatore, non gestisce un portafoglio elettronico interno. L\'app ti guida a completare il pagamento direttamente tramite PayPal, Satispay o Contanti. I soldi arrivano direttamente all\'organizzatore, senza passare dai nostri sistemi.',
+    
+    'faq.question4': 'Posso permettere contributi in contanti?',
+    'faq.answer4': 'Sì! Gli invitati possono scegliere tra "Pagamento Digitale" (PayPal/Satispay) o "Pagamento in Contanti". I contributi in contanti verranno segnati come "promessi" finché tu non confermerai manualmente di averli ricevuti.',
+    
+    'faq.question5': 'I miei dati di pagamento sono al sicuro?',
+    'faq.answer5': 'Sì, perché PartyPool non memorizza mai i tuoi dati finanziari. Le transazioni avvengono esclusivamente sulle piattaforme esterne sicure (come PayPal o Satispay) che già conosci.',
+    
+    'faq.question6': 'Posso modificare un evento dopo averlo creato?',
+    'faq.answer6': 'Certamente! Come organizzatore, puoi modificare tutti i dettagli (nome, data, descrizione, importi obiettivo e link al regalo) in qualsiasi momento direttamente dalla tua dashboard.',
+    
+    'faq.question7': 'Cosa succede se non raggiungiamo l\'obiettivo?',
+    'faq.answer7': 'L\'organizzatore riceve comunque tutti i contributi raccolti. PartyPool è uno strumento di coordinamento: non ci sono obiettivi vincolanti o blocchi dei fondi.',
+    
+    'faq.question8': 'Come funziona la modalità "Quote Uguali"?',
+    'faq.answer8': 'È semplicissimo: specifichi il costo totale del regalo e il numero di amici che parteciperanno. L\'app calcola automaticamente la quota esatta per ciascuno, eliminando ogni imbarazzo nel chiedere i soldi.',
+    
+    'faq.question9': 'Gli altri partecipanti possono vedere quanto ho contribuito?',
+    'faq.answer9': 'Dipende dalle impostazioni dell\'organizzatore. Può scegliere di mostrare gli importi singoli, oppure nasconderli mostrando solo la lista di chi ha partecipato.',
+    
+    'faq.question10': 'Posso contribuire in modo anonimo?',
+    'faq.answer10': 'Sì. Selezionando l\'opzione "Anonimo", il tuo nome non sarà visibile agli altri invitati, ma solo all\'organizzatore (che deve poter verificare il pagamento).',
+    
+    'faq.question11': 'Devo per forza comprare il regalo su Amazon?',
+    'faq.answer11': 'Assolutamente no! Puoi aggiungere qualsiasi link (Amazon, altri negozi, o nessun link). La funzione di affiliazione Amazon aiuta semplicemente a supportare PartyPool quando scegli di usarla, ma è completamente opzionale.',
+    
+    'faq.question12': 'Posso condividere link a negozi esterni?',
+    'faq.answer12': 'Sì! Puoi aggiungere link a qualsiasi negozio online o fisico. Se preferisci, puoi anche solo descrivere il regalo senza aggiungere alcun link. È completamente flessibile.',
+    
+    'faq.question13': 'Posso creare più eventi contemporaneamente?',
+    'faq.answer13': 'Certamente! Non c\'è limite al numero di eventi che puoi organizzare. Tutti saranno comodamente gestibili dalla tua dashboard personale.',
+   
     'faq.ctaTitle': 'Hai Ancora Domande?',
     'faq.ctaSubtitle': 'Il modo migliore per capire è provarlo tu stesso',
     'faq.ctaButton': 'Crea Ora il Tuo Evento',
