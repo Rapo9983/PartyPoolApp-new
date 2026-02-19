@@ -16,24 +16,13 @@ export default function FAQ({ onBack, onCreateEvent }: FAQProps) {
   const { t } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const faqs: FAQItem[] = [
-    {
-      question: t('faq.question1'),
-      answer: t('faq.answer1'),
-    },
-    {
-      question: t('faq.question2'),
-      answer: t('faq.answer2'),
-    },
-    {
-      question: t('faq.question3'),
-      answer: t('faq.answer3'),
-    },
-    {
-      question: t('faq.question4'),
-      answer: t('faq.answer4'),
-    },
-  ];
+  // Genera automaticamente l'array delle FAQ basandosi sul numero totale (13)
+  // Questo ti evita di scrivere t('faq.questionX') tredici volte nel codice.
+  const faqCount = 13; 
+  const faqs: FAQItem[] = Array.from({ length: faqCount }).map((_, i) => ({
+    question: t(`faq.question${i + 1}`),
+    answer: t(`faq.answer${i + 1}`),
+  }));
 
   const toggleQuestion = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -78,6 +67,8 @@ export default function FAQ({ onBack, onCreateEvent }: FAQProps) {
                   <ChevronDown className="w-6 h-6 text-gray-400 flex-shrink-0" />
                 )}
               </button>
+              
+              {/* Animazione fluida suggerita: se aggiungerai Framer Motion in futuro */}
               {openIndex === index && (
                 <div className="px-6 pb-5 pt-2 text-gray-600 leading-relaxed border-t border-gray-100">
                   {faq.answer}
