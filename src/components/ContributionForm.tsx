@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { createPayPalLink } from '../lib/utils';
 import SatispayPopup from './SatispayPopup';
 import confetti from 'canvas-confetti';
-import { X, Coffee, Wallet, CreditCard, User, MessageSquare } from 'lucide-react';
+import { X, Coffee, Wallet, CreditCard, User, MessageSquare, UserPlus } from 'lucide-react';
 
 interface ContributionFormProps {
   eventId: string;
@@ -16,16 +17,19 @@ interface ContributionFormProps {
   onSuccess: () => void;
 }
 
-export default function ContributionForm({ 
-  eventId, 
-  currency, 
-  paypalEmail, 
-  satispayId, 
-  onClose, 
-  onSuccess 
+export default function ContributionForm({
+  eventId,
+  currency,
+  paypalEmail,
+  satispayId,
+  onClose,
+  onSuccess
 }: ContributionFormProps) {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showSatispayPopup, setShowSatispayPopup] = useState(false);
+  const [showRegistrationPrompt, setShowRegistrationPrompt] = useState(false);
+  const [contributionId, setContributionId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
@@ -38,7 +42,7 @@ export default function ContributionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || !formData.amount) return;
-    
+
     setLoading(true);
 
     try {
@@ -47,8 +51,7 @@ export default function ContributionForm({
       const finalName = formData.isAnonymous ? 'Un amico' : (formData.name || 'Anonimo');
 
       // 1. Inserimento del contributo nella tabella 'contributions'
-      // Nota: il trigger SQL aggiornerà automaticamente la barra in EventDashboard
-      const { error: contributionError } = await supabase
+      const { data: contributionData, error: contributionError } = await supabase
         .from('contributions')
         .insert([{
           event_id: eventId,
@@ -58,9 +61,11 @@ export default function ContributionForm({
           support_amount: support,
           message: formData.message,
           payment_method: formData.paymentMethod,
-          // Se è contanti è 'promised' (l'admin deve confermare), se è digitale è 'confirmed'
-          payment_status: formData.paymentMethod === 'cash' ? 'promised' : 'confirmed'
-        }]);
+          payment_status: formData.paymentMethod === 'cash' ? 'promised' : 'confirmed',
+          contributor_user_id: user?.id || null
+        }])
+        .select()
+        .single();
 
       if (contributionError) {
         console.error("Dettaglio Errore Supabase (Contributions):", contributionError);
@@ -76,10 +81,9 @@ export default function ContributionForm({
             author_name: finalName,
             message: formData.message
           }]);
-        
+
         if (wishError) {
           console.error("Dettaglio Errore Supabase (Wishes):", wishError);
-          // Non blocchiamo tutto se fallisce solo l'augurio
         }
       }
 
@@ -91,11 +95,18 @@ export default function ContributionForm({
         colors: ['#f97316', '#ec4899', '#eab308']
       });
 
-      // Piccolo delay per permettere all'utente di vedere i coriandoli e al DB di aggiornarsi
-      setTimeout(() => {
+      // Se l'utente NON è loggato, mostriamo il prompt di registrazione
+      if (!user && contributionData) {
+        setContributionId(contributionData.id);
+        setShowRegistrationPrompt(true);
         setLoading(false);
-        onSuccess();
-      }, 1500);
+      } else {
+        // Altrimenti chiudiamo normalmente
+        setTimeout(() => {
+          setLoading(false);
+          onSuccess();
+        }, 1500);
+      }
 
     } catch (err: any) {
       setLoading(false);
@@ -104,18 +115,63 @@ export default function ContributionForm({
     }
   };
 
+  const handleSaveToProfile = async () => {
+    window.location.href = `/registrazione?redirect=true&contribution_id=${contributionId}`;
+  };
+
+  const handleSkipRegistration = () => {
+    setShowRegistrationPrompt(false);
+    onSuccess();
+  };
+
   const currentAmountValue = parseFloat(formData.amount) || 0;
   const total = currentAmountValue + (formData.addSupport ? 1 : 0);
+
+  if (showRegistrationPrompt) {
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999] backdrop-blur-md">
+        <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-300">
+          <div className="p-8 border-b bg-gradient-to-r from-orange-50 via-pink-50 to-yellow-50">
+            <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter text-center">Grazie!</h2>
+          </div>
+          <div className="p-10 space-y-6 text-center">
+            <div className="bg-gradient-to-br from-orange-100 to-pink-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <UserPlus className="w-10 h-10 text-orange-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">Vuoi salvare questo ricordo?</h3>
+            <p className="text-gray-600">
+              Crea un account gratuito per tenere traccia di tutti i regali che fai nel tempo.
+              Una timeline della tua generosità tra amici!
+            </p>
+            <div className="space-y-3 pt-4">
+              <button
+                onClick={handleSaveToProfile}
+                className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-5 rounded-[2rem] font-black shadow-xl hover:from-orange-600 hover:to-pink-600 transition-all uppercase tracking-tighter"
+              >
+                Salva nel mio profilo
+              </button>
+              <button
+                onClick={handleSkipRegistration}
+                className="w-full bg-gray-100 text-gray-600 py-4 rounded-[2rem] font-bold hover:bg-gray-200 transition-all"
+              >
+                No grazie, continua
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999] backdrop-blur-md">
       <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-300">
         
         {/* Header */}
-        <div className="p-8 border-b flex justify-between items-center bg-gray-50">
+        <div className="p-8 border-b flex justify-between items-center bg-gradient-to-r from-orange-50 via-pink-50 to-yellow-50">
           <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">Fai un regalo</h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-3 bg-white shadow-md rounded-full hover:bg-gray-100 transition-all"
           >
             <X size={20} />
