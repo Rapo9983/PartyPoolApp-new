@@ -4,7 +4,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabaseClient';
 import { extractImageFromUrl, formatCurrency } from '../lib/utils';
 import { addAmazonAffiliateTag, isAmazonLink, expandShortAmazonUrl } from '../lib/affiliateUtils';
-import { Calendar, User, FileText, Link2, ArrowLeft, Clock, MapPin, Gift, Image as ImageIcon, Upload, Users, Check, Info } from 'lucide-react';
+import { Calendar, User, FileText, Link2, ArrowLeft, Clock, MapPin, Gift, Image as ImageIcon, Upload, Users, Check, Info, Edit } from 'lucide-react';
+import ImageCropper from './ImageCropper';
 
 const PayPalIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -35,6 +36,8 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
   const [celebrantImageUrl, setCelebrantImageUrl] = useState<string>('');
   const [celebrantImagePreview, setCelebrantImagePreview] = useState<string | null>(null);
   const [imageInputType, setImageInputType] = useState<'url' | 'file'>('url');
+  const [showImageCropper, setShowImageCropper] = useState(false);
+  const [tempImageForCrop, setTempImageForCrop] = useState<string>('');
   const [showDraftRecoveredMessage, setShowDraftRecoveredMessage] = useState(false);
   const [amazonLinkValid, setAmazonLinkValid] = useState(false);
   const [processingAmazonLink, setProcessingAmazonLink] = useState(false);
@@ -146,7 +149,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       setError(t('event.imageTooBig'));
       return;
     }
@@ -154,10 +157,29 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      setCelebrantImageUrl(base64String);
-      setCelebrantImagePreview(base64String);
+      setTempImageForCrop(base64String);
+      setShowImageCropper(true);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageCropSave = (croppedImageData: string) => {
+    setCelebrantImageUrl(croppedImageData);
+    setCelebrantImagePreview(croppedImageData);
+    setShowImageCropper(false);
+    setTempImageForCrop('');
+  };
+
+  const handleImageCropCancel = () => {
+    setShowImageCropper(false);
+    setTempImageForCrop('');
+  };
+
+  const handleEditImage = () => {
+    if (celebrantImagePreview) {
+      setTempImageForCrop(celebrantImagePreview);
+      setShowImageCropper(true);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -317,7 +339,17 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
 
               {celebrantImagePreview && (
                 <div className="mt-3 p-3 bg-gradient-to-br from-orange-50 via-pink-50 to-yellow-50 rounded-lg border border-orange-200">
-                  <p className="text-xs text-gray-600 mb-2">{t('event.imagePreview')}</p>
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-xs text-gray-600">{t('event.imagePreview')}</p>
+                    <button
+                      type="button"
+                      onClick={handleEditImage}
+                      className="text-xs text-orange-600 hover:text-orange-700 flex items-center gap-1 font-medium"
+                    >
+                      <Edit className="w-3 h-3" />
+                      Modifica
+                    </button>
+                  </div>
                   <img
                     src={celebrantImagePreview}
                     alt="Celebrant preview"
@@ -501,7 +533,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
                 onChange={(e) => setFormData({ ...formData, giftDescription: e.target.value })}
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none"
-                placeholder="Descrivi il regalo..."
+                placeholder="Descrivi il regalo che desideri ricevere..."
               />
             </div>
 
@@ -618,6 +650,14 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
           </form>
         </div>
       </div>
+
+      {showImageCropper && tempImageForCrop && (
+        <ImageCropper
+          imageUrl={tempImageForCrop}
+          onSave={handleImageCropSave}
+          onCancel={handleImageCropCancel}
+        />
+      )}
     </div>
   );
 }
