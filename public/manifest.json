@@ -27,14 +27,5 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["lifestyle", "social", "utilities"],
-  "share_target": {
-    "action": "/",
-    "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
+  "categories": ["lifestyle", "social", "utilities"]
 }
