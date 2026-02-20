@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { formatCurrency } from '../lib/utils';
 import { Gift, Calendar, MessageSquare, ExternalLink } from 'lucide-react';
 
@@ -29,6 +30,7 @@ interface ContributionHistoryProps {
 
 export default function ContributionHistory({ onViewEvent }: ContributionHistoryProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [contributions, setContributions] = useState<ContributionWithEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -111,7 +113,7 @@ export default function ContributionHistory({ onViewEvent }: ContributionHistory
   if (loading) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-        <div className="text-gray-600">Caricamento...</div>
+        <div className="text-gray-600">{t('history.loading')}</div>
       </div>
     );
   }
@@ -122,9 +124,9 @@ export default function ContributionHistory({ onViewEvent }: ContributionHistory
         <div className="bg-gradient-to-br from-orange-100 to-pink-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
           <Gift className="w-10 h-10 text-orange-500" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Nessun regalo ancora</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{t('history.noGifts')}</h3>
         <p className="text-gray-600">
-          Quando contribuirai a un evento, vedrai qui la tua storia di generosità!
+          {t('history.noGiftsDesc')}
         </p>
       </div>
     );
@@ -141,17 +143,17 @@ export default function ContributionHistory({ onViewEvent }: ContributionHistory
             <Gift className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-3xl font-black uppercase tracking-tighter">La Tua Timeline</h3>
-            <p className="text-white/80 text-sm font-semibold">I regali a cui hai contribuito</p>
+            <h3 className="text-3xl font-black uppercase tracking-tighter">{t('history.yourTimeline')}</h3>
+            <p className="text-white/80 text-sm font-semibold">{t('history.giftsContributed')}</p>
           </div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mt-4">
-          <div className="text-sm font-semibold text-white/80">Totale Contribuito</div>
+          <div className="text-sm font-semibold text-white/80">{t('history.totalContributed')}</div>
           <div className="text-4xl font-black mt-1">
             {formatCurrency(getTotalContributed(), contributions[0]?.event?.currency || 'EUR')}
           </div>
           <div className="text-sm font-semibold text-white/80 mt-2">
-            in {contributions.length} {contributions.length === 1 ? 'regalo' : 'regali'}
+            {t('history.in')} {contributions.length} {contributions.length === 1 ? t('history.gift') : t('history.gifts')}
           </div>
         </div>
       </div>
@@ -176,7 +178,7 @@ export default function ContributionHistory({ onViewEvent }: ContributionHistory
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <h4 className="font-black text-xl text-gray-900 mb-1">
-                        Regalo per {contribution.event.celebrant_name}
+                        {t('history.giftFor')} {contribution.event.celebrant_name}
                       </h4>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="w-4 h-4" />
@@ -193,7 +195,7 @@ export default function ContributionHistory({ onViewEvent }: ContributionHistory
                       </div>
                       {contribution.support_amount > 0 && (
                         <div className="text-xs text-gray-500 font-semibold">
-                          +{formatCurrency(contribution.support_amount, contribution.event.currency)} caffè
+                          +{formatCurrency(contribution.support_amount, contribution.event.currency)} {t('history.coffee')}
                         </div>
                       )}
                     </div>
@@ -217,14 +219,14 @@ export default function ContributionHistory({ onViewEvent }: ContributionHistory
                           ? 'bg-green-100 text-green-700'
                           : 'bg-yellow-100 text-yellow-700'
                       }`}>
-                        {contribution.payment_status === 'confirmed' ? 'Confermato' : 'In attesa'}
+                        {contribution.payment_status === 'confirmed' ? t('history.confirmed') : t('history.pending')}
                       </span>
                       <span className="text-xs font-semibold text-gray-500">
-                        {contribution.payment_method === 'digital' ? 'Online' : 'Contanti'}
+                        {contribution.payment_method === 'digital' ? t('history.online') : t('history.cash')}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-400 font-semibold">
-                      Vedi evento
+                      {t('history.viewEvent')}
                       <ExternalLink className="w-3 h-3" />
                     </div>
                   </div>
