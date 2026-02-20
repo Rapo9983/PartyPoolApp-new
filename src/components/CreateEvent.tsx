@@ -347,7 +347,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
                       className="text-xs text-orange-600 hover:text-orange-700 flex items-center gap-1 font-medium"
                     >
                       <Edit className="w-3 h-3" />
-                      Modifica
+                      {t('dashboard.editEvent')}
                     </button>
                   </div>
                   <img
@@ -525,7 +525,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
             <div>
               <label htmlFor="giftDescription" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                 <Gift className="w-4 h-4" />
-                Il regalo
+                {t('event.theGift')}
               </label>
               <textarea
                 id="giftDescription"
@@ -533,7 +533,7 @@ export default function CreateEvent({ onEventCreated, onBack }: CreateEventProps
                 onChange={(e) => setFormData({ ...formData, giftDescription: e.target.value })}
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition resize-none"
-                placeholder="Descrivi il regalo che desideri ricevere..."
+                placeholder={t('event.descriptionPlaceholder')}
               />
             </div>
 
