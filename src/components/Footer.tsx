@@ -111,9 +111,9 @@ export default function Footer({ onCreateEventClick, onSignInClick }: FooterProp
 
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col items-center gap-4 text-sm text-gray-400 mb-4">
-            <p className="text-center text-xs">
-              In qualità di affiliato, PartyPool riceve un guadagno dagli acquisti idonei. Questo non influisce sul prezzo finale del tuo regalo.
-            </p>
+           <p className="text-center text-xs">
+  {t('footer.affiliation')}
+</p>
             <div className="flex gap-4">
               <a
                 href="/privacy"
