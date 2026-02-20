@@ -140,27 +140,27 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
     const url = window.location.href;
     if (navigator.share) {
       await navigator.share({
-        title: `Party for ${event?.celebrant_name}`,
-        text: `Join us in celebrating ${event?.celebrant_name}!`,
+        title: `${t('event.partyFor')} ${event?.celebrant_name}`,
+        text: `${t('event.partyFor')} ${event?.celebrant_name}!`,
         url,
       });
     } else {
       await navigator.clipboard.writeText(url);
-      alert('Link copiato negli appunti!');
+      alert(t('event.linkCopied'));
     }
   };
 
   const handleAddToCalendar = () => {
     if (!event) return;
     const eventUrl = window.location.href;
-    const title = `Festa di ${event.celebrant_name}`;
-    const description = `${event.description}\n\nPartecipa alla raccolta: ${eventUrl}`;
+    const title = `${t('event.partyFor')} ${event.celebrant_name}`;
+    const description = `${event.description}\n\n${eventUrl}`;
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     if (isMobile) {
       window.open(createGoogleCalendarUrl(title, event.event_date, description, eventUrl), '_blank');
     } else {
-      downloadCalendarFile(`festa-${event.celebrant_name}.ics`, generateCalendarEvent(title, event.event_date, description, eventUrl));
+      downloadCalendarFile(`${event.celebrant_name}.ics`, generateCalendarEvent(title, event.event_date, description, eventUrl));
     }
   };
 
@@ -169,7 +169,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
       const { error } = await supabase.from('contributions').update({ payment_status: 'confirmed' }).eq('id', contributionId);
       if (error) throw error;
     } catch (error) {
-      alert('Errore durante la conferma del pagamento');
+      alert(t('event.cashPaymentError'));
     }
   };
 
@@ -188,7 +188,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
       if (error) throw error;
       if (onBack) onBack();
     } catch (error) {
-      alert('Failed to delete event.');
+      alert(t('event.deleteError'));
       setDeleting(false);
     }
   };
@@ -311,7 +311,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold flex items-center gap-2">
-                        <ShoppingBag size={18} /> Il regalo
+                        <ShoppingBag size={18} /> {t('event.theGift')}
                       </h3>
                       {event.gift_description && (
                         <p className="text-sm mt-1 opacity-90">{event.gift_description}</p>
@@ -323,7 +323,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                           rel="noopener noreferrer"
                           className="text-sm underline flex items-center gap-1 mt-1 opacity-90 hover:opacity-100"
                         >
-                          Vedi il regalo <ExternalLink size={12} />
+                          {t('event.seeGift')} <ExternalLink size={12} />
                         </a>
                       )}
                     </div>
@@ -349,7 +349,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                   {totalCaffé > 0 && (
                     <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
                       <Coffee size={14} />
-                      <span>{totalCaffé} {totalCaffé === 1 ? 'Caffè offerto' : 'Caffè offerti'}</span>
+                      <span>{totalCaffé} {totalCaffé === 1 ? t('event.coffeeOffered') : t('event.coffeesOffered')}</span>
                     </div>
                   )}
                 </div>
@@ -358,7 +358,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               {isCreator && (
                 <div className="mt-4 p-3 bg-black/10 rounded-lg flex items-center justify-between border border-white/10">
                   <div className="flex items-center gap-2 text-sm font-medium">
-                    <Wallet size={16} /> Incasso Totale (Regali + Caffè):
+                    <Wallet size={16} /> {t('event.totalIncome')}
                   </div>
                   <div className="font-bold">{formatCurrency(realTotal, event.currency)}</div>
                 </div>
@@ -382,7 +382,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="flex items-center gap-2 text-xl font-bold text-gray-800 mb-4">
-                    <Users className="w-6 h-6 text-orange-500" /> Contributi ({contributions.length})
+                    <Users className="w-6 h-6 text-orange-500" /> {t('event.contributions')} ({contributions.length})
                   </h3>
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                     {contributions.length === 0 ? (
@@ -394,7 +394,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-gray-800">{contribution.contributor_name}</span>
                               {Number(contribution.support_amount) > 0 && (
-                                <div className="bg-orange-100 p-1 rounded-full shadow-sm" title="Ha offerto un caffè!">
+                                <div className="bg-orange-100 p-1 rounded-full shadow-sm" title={t('event.haveCoffee')}>
                                   <Coffee size={12} className="text-orange-500" />
                                 </div>
                               )}
@@ -404,7 +404,7 @@ export default function EventDashboard({ slug, onBack, onEdit }: EventDashboardP
                           <div className="flex justify-between items-center mt-2">
                             <span className="text-xs text-gray-400">{new Date(contribution.created_at).toLocaleDateString()}</span>
                             {isCreator && contribution.payment_status === 'promised' && (
-                              <button onClick={() => handleConfirmCashPayment(contribution.id)} className="text-xs bg-green-500 text-white px-2 py-1 rounded-md flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Conferma</button>
+                              <button onClick={() => handleConfirmCashPayment(contribution.id)} className="text-xs bg-green-500 text-white px-2 py-1 rounded-md flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {t('event.cashConfirm')}</button>
                             )}
                           </div>
                         </div>
