@@ -1,31 +1,33 @@
-{
-  "name": "PartyPool - Regali Collettivi",
-  "short_name": "PartyPool",
-  "description": "Organizza regali collettivi in modo semplice e veloce",
-  "start_url": "/?v=4",
-  "display": "standalone",
-  "background_color": "#f97316",
-  "theme_color": "#f97316",
-  "orientation": "portrait-primary",
-  "icons": [
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+import { useEffect } from 'react';
+
+// ... dentro il tuo componente
+
+useEffect(() => {
+  // 1. Gestione Link da Tasto Condividi (Soluzione 1)
+  const queryParams = new URLSearchParams(window.location.search);
+  const sharedUrl = queryParams.get('url') || queryParams.get('text'); // Amazon a volte manda il link nel campo 'text'
+  
+  if (sharedUrl && sharedUrl.includes('http')) {
+    console.log("Link ricevuto da condivisione:", sharedUrl);
+    // Qui puoi aprire automaticamente il modal per creare l'evento
+    // o popolare il campo "Link Regalo"
+  }
+
+  // 2. Rilevamento automatico Clipboard (Soluzione 3)
+  const checkClipboard = async () => {
+    try {
+      // Nota: Il browser chiederà il permesso all'utente la prima volta
+      const text = await navigator.clipboard.readText();
+      if (text.includes('amazon.it') || text.includes('amzn.to')) {
+        // Mostra un piccolo avviso/toast: "Abbiamo trovato un link Amazon negli appunti, vuoi usarlo?"
+        console.log("Link Amazon trovato negli appunti:", text);
+      }
+    } catch (err) {
+      // Silenzioso: l'utente non ha dato i permessi o il browser non supporta la lettura automatica
     }
-  ],
-  "categories": ["lifestyle", "social", "utilities"]
-}
+  };
+
+  // Controlla la clipboard quando l'app torna in primo piano (focus)
+  window.addEventListener('focus', checkClipboard);
+  return () => window.removeEventListener('focus', checkClipboard);
+}, []);
