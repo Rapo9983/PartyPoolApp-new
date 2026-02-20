@@ -175,7 +175,7 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
             }`}
           >
             <Gift className="w-5 h-5" />
-            I TUOI EVENTI
+            {t('dashboard.myEvents')}
           </button>
           <button
             onClick={() => setActiveTab('contributions')}
@@ -186,7 +186,7 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
             }`}
           >
             <Heart className="w-5 h-5" />
-            I TUOI REGALI
+            {t('dashboard.myGifts')}
           </button>
         </div>
 
@@ -272,7 +272,7 @@ export default function Dashboard({ onCreateEvent, onViewEvent, onEditEvent }: D
                         {t('dashboard.goal')}: {formatCurrency(Number(event.budget_goal), event.currency)}
                       </div>
                       <div className="text-xs text-gray-400 flex items-center gap-1">
-                        {formatCurrency(event.current_amount, event.currency)} raccolti
+                        {formatCurrency(event.current_amount, event.currency)} {t('dashboard.collected')}
                         <ExternalLink className="w-4 h-4" />
                       </div>
                     </div>
