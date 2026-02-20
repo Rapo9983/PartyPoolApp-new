@@ -18,7 +18,7 @@ export default function FAQ({ onBack, onCreateEvent }: FAQProps) {
 
   // Genera automaticamente l'array delle FAQ basandosi sul numero totale (13)
   // Questo ti evita di scrivere t('faq.questionX') tredici volte nel codice.
-  const faqCount = 13; 
+  const faqCount = 12;
   const faqs: FAQItem[] = Array.from({ length: faqCount }).map((_, i) => ({
     question: t(`faq.question${i + 1}`),
     answer: t(`faq.answer${i + 1}`),
